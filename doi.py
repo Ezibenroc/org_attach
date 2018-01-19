@@ -2,8 +2,10 @@
 
 import sys
 import requests
-import pybtex.database # https://pypi.python.org/pypi/pybtex/
+import pybtex.database  # https://pypi.python.org/pypi/pybtex/
+import pyperclip        # https://pypi.python.org/pypi/pyperclip
 
+# Note: to get a JSON instead of a bibtex entry, use head = {'Accept': 'application/vnd.citationstyles.csl+json'}
 def bibtex_from_doi(doi):
     url = 'http://dx.doi.org/%s' % doi
     head = {'Accept': 'application/x-bibtex'}
@@ -28,8 +30,7 @@ org_str = '''**** UNREAD {title}
 ***** Open Questions [/]
 ***** BibTeX
 #+BEGIN_SRC bib :tangle bibliography.bib
-{bibtex}
-#+END_SRC'''
+{bibtex}#+END_SRC'''
 
 def get_entry(bib): # suppose one and only one entry
     return bib.entries.values()[0]
@@ -77,4 +78,6 @@ def orgmode_from_bibentry(bib):
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         sys.exit('Syntax: %s <doi>' % sys.argv[0])
-    print(orgmode_from_bibentry(bib_from_doi(sys.argv[1])))
+    output = orgmode_from_bibentry(bib_from_doi(sys.argv[1]))
+    pyperclip.copy(output)
+    print(output)
