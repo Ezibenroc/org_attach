@@ -21,7 +21,17 @@ python3 doi_to_org.py 10.1137/0206024 10.1145/357172.357176 10.1145/321033.32103
 
 Result:
 ```org
-N_SRC bib :tangle bibliography.bib
+**** UNREAD Fast Pattern Matching in Strings
+:PROPERTIES:
+:DOI: 10.1137/0206024
+:URL: https://doi.org/10.1137%2F0206024
+:AUTHORS: Donald E. Knuth, Jr. James H. Morris, Vaughan R. Pratt
+:END:
+***** Summary
+***** Notes
+***** Open Questions [/]
+***** BibTeX
+#+BEGIN_SRC bib :tangle bibliography.bib
 @article{Knuth_1977,
     author = "Knuth, Donald E. and James H. Morris, Jr. and Pratt, Vaughan R.",
     doi = "10.1137/0206024",
