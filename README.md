@@ -14,6 +14,9 @@ git clone https://github.com/Ezibenroc/DOI_to_org.git
 python3 doi_to_org.py DOI1 DOI2 DOI3 DOI4 ...
 ```
 
+It will print the result to the terminal and copy it to your clipboard. Hence, if you wish
+to use it in an org-mode file, you do not have to manually copy it.
+
 Example:
 ```sh
 python3 doi_to_org.py 10.1137/0206024 10.1145/357172.357176 10.1145/321033.321034
