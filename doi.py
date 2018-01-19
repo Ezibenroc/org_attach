@@ -15,6 +15,8 @@ def bibtex_from_doi(doi):
 
 def bib_from_doi(doi):
     bib = pybtex.database.parse_string(bibtex_from_doi(doi), bib_format='bibtex')
+    if len(bib.entries) == 0:
+        sys.exit('Unknown doi: %s' % doi)
     assert len(bib.entries) == 1
     return bib
 
@@ -45,7 +47,10 @@ def get_bibtex(bib):
     return bib.to_string('bibtex')
 
 def get_url(bib):
-    return get_entry(bib).fields['url']
+    try:
+        return get_entry(bib).fields['url']
+    except KeyError:
+        return ''
 
 def format_name(name):
     return name.plaintext()
@@ -76,8 +81,11 @@ def orgmode_from_bibentry(bib):
     )
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         sys.exit('Syntax: %s <doi>' % sys.argv[0])
-    output = orgmode_from_bibentry(bib_from_doi(sys.argv[1]))
+    output = []
+    for doi in sys.argv[1:]:
+        output.append(orgmode_from_bibentry(bib_from_doi(doi)))
+    output = '\n'.join(output)
     pyperclip.copy(output)
     print(output)
