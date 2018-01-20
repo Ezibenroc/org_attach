@@ -11,8 +11,10 @@ git clone https://github.com/Ezibenroc/DOI_to_org.git
 ## Usage
 
 ```sh
-python3 doi_to_org.py DOI1 DOI2 DOI3 DOI4 ...
+python3 doi_to_org.py ARG1 ARG2 ARG3 ARG4 ...
 ```
+
+Each argument can either be a DOI or the path to a bibtex file.
 
 It will print the result to the terminal and copy it to your clipboard. Hence, if you wish
 to use it in an org-mode file, you do not have to manually copy it.

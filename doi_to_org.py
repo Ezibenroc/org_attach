@@ -13,13 +13,41 @@ def bibtex_from_doi(doi):
     assert req.status_code == 200
     return req.text
 
+class BibError(Exception):
+    pass
+
 def bib_from_doi(doi):
     bib = pybtex.database.parse_string(bibtex_from_doi(doi), bib_format='bibtex')
     if len(bib.entries) == 0:
-        sys.exit('Unknown doi: %s' % doi)
+        raise BibError('Unknown doi: %s' % doi)
     assert len(bib.entries) == 1
     return bib
 
+def bib_from_file(filename):
+    try:
+        with open(filename) as f:
+            return pybtex.database.parse_file(f)
+    except FileNotFoundError:
+        raise BibError('Unknown file: %s' % filename)
+
+def split_bib(bib):
+    entries = []
+    for key, value in bib.entries.items():
+        entries.append(pybtex.database.BibliographyData({key : value}))
+    return entries
+
+def process_args(args):
+    entries = []
+    for arg in args:
+        try: # is this a bibtex file ?
+            subentries = split_bib(bib_from_file(arg))
+        except BibError: # apparently not, maybe a DOI?
+            try:
+                subentries = [bib_from_doi(arg)]
+            except BibError: # ok, don't know what this is...
+                sys.exit('Error with argument %s: neither a bibtex file nor a DOI.' % arg)
+        entries.extend(subentries)
+    return entries
 
 org_str = '''**** UNREAD {title}
 :PROPERTIES:
@@ -41,7 +69,10 @@ def get_title(bib):
     return get_entry(bib).fields['title']
 
 def get_doi(bib):
-    return get_entry(bib).fields['doi']
+    try:
+        return get_entry(bib).fields['doi']
+    except KeyError:
+        return ''
 
 def get_bibtex(bib):
     return bib.to_string('bibtex')
@@ -83,9 +114,10 @@ def orgmode_from_bibentry(bib):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit('Syntax: %s <doi>' % sys.argv[0])
+    bib_entries = process_args(sys.argv[1:])
     output = []
-    for doi in sys.argv[1:]:
-        output.append(orgmode_from_bibentry(bib_from_doi(doi)))
+    for entry in bib_entries:
+        output.append(orgmode_from_bibentry(entry))
     output = '\n'.join(output)
     pyperclip.copy(output)
     print(output)
