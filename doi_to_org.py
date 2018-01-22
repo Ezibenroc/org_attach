@@ -27,7 +27,7 @@ def bib_from_doi(doi):
 def bib_from_file(filename):
     try:
         with open(filename) as f:
-            return pybtex.database.parse_file(f)
+            return pybtex.database.parse_file(f, bib_format='bibtex')
     except FileNotFoundError:
         raise BibError('Unknown file: %s' % filename)
 
