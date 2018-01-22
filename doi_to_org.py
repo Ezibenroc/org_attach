@@ -44,7 +44,7 @@ def process_args(args):
         except BibError: # apparently not, maybe a DOI?
             try:
                 subentries = [bib_from_doi(arg)]
-            except BibError: # ok, don't know what this is...
+            except (BibError, AssertionError): # ok, don't know what this is...
                 sys.exit('Error with argument %s: neither a bibtex file nor a DOI.' % arg)
         entries.extend(subentries)
     return entries
@@ -66,7 +66,7 @@ def get_entry(bib): # suppose one and only one entry
     return bib.entries.values()[0]
 
 def get_title(bib):
-    return get_entry(bib).fields['title']
+    return str(get_entry(bib).rich_fields['title'])
 
 def get_doi(bib):
     try:
