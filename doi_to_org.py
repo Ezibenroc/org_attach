@@ -2,6 +2,7 @@
 
 import sys
 import requests
+import re
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 import pyperclip        # https://pypi.python.org/pypi/pyperclip
 
@@ -97,19 +98,21 @@ def get_authors(bib):
         names.append(format_person(person))
     return ', '.join(names)
 
+trailing_white_spaces_reg = re.compile('\s*\n') # to remove the whitespaces at the end of the lines
+
 def orgmode_from_bibentry(bib):
     title = get_title(bib)
     authors = get_authors(bib)
     doi = get_doi(bib)
     url = get_url(bib)
     bibtex = get_bibtex(bib)
-    return org_str.format(
+    return trailing_white_spaces_reg.sub('\n', org_str.format(
             title=title,
             doi=doi,
             url=url,
             authors=authors,
             bibtex=bibtex,
-    )
+    ))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
