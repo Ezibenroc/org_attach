@@ -49,7 +49,7 @@ def process_args(args):
         entries.extend(subentries)
     return entries
 
-org_str = '''**** UNREAD {title}
+org_str = '''**** UNREAD {title}\t:PAPER:
 :PROPERTIES:
 :DOI: {doi}
 :URL: {url}
