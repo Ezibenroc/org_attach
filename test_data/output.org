@@ -1,0 +1,25 @@
+**** UNREAD Fast Pattern Matching in Strings	:PAPER:
+:PROPERTIES:
+:DOI: 10.1137/0206024
+:URL: https://doi.org/10.1137%2F0206024
+:AUTHORS: Donald E. Knuth, Jr. James H. Morris, Vaughan R. Pratt
+:END:
+***** Summary
+***** Notes
+***** Open Questions [/]
+***** BibTeX
+#+BEGIN_SRC bib :tangle bibliography.bib
+@article{Knuth_1977,
+    author = "Knuth, Donald E. and James H. Morris, Jr. and Pratt, Vaughan R.",
+    doi = "10.1137/0206024",
+    url = "https://doi.org/10.1137\%2F0206024",
+    year = "1977",
+    month = "jun",
+    publisher = "Society for Industrial {\\&} Applied Mathematics ({SIAM})",
+    volume = "6",
+    number = "2",
+    pages = "323--350",
+    title = "Fast Pattern Matching in Strings",
+    journal = "{SIAM} Journal on Computing"
+}
+#+END_SRC
