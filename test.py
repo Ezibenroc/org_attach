@@ -33,7 +33,7 @@ class BasicTest(unittest.TestCase):
         self.assertEqual(output, self.expected)
 
     def test_fixpoint(self):
-        first_output = self.run_prog('test_data/input.bib').strip()
+        first_output = self.run_prog('test_data/input.bib')
         splitted = first_output.split('\n')
         bibtex = []
         in_src = False

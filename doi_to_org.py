@@ -4,6 +4,18 @@ import sys
 import requests
 import re
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
+from pybtex.database.output.bibtex import Writer
+
+class CustomWriter(Writer):
+    '''
+    We disable the Latex encoding done by pybtex. Otherwise, it will add a backslash in front of a lot of things
+    in the bibtex.
+    For instance, for the url https://doi.org/10.1137%2F0206024, it used to replace '%' by '\%'. Calling the
+    program again with the resulting bibtex would then replace the '\%' by a '\\%'. This is obviously buggy,
+    so let's just disable it.
+    '''
+    def _encode(self, text):
+        return text
 
 # Note: to get a JSON instead of a bibtex entry, use head = {'Accept': 'application/vnd.citationstyles.csl+json'}
 def bibtex_from_doi(doi):
@@ -75,6 +87,7 @@ def get_doi(bib):
         return ''
 
 def get_bibtex(bib):
+    return CustomWriter().to_string(bib)
     return bib.to_string('bibtex')
 
 def get_url(bib):
