@@ -4,7 +4,6 @@ import sys
 import requests
 import re
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
-import pyperclip        # https://pypi.python.org/pypi/pyperclip
 
 # Note: to get a JSON instead of a bibtex entry, use head = {'Accept': 'application/vnd.citationstyles.csl+json'}
 def bibtex_from_doi(doi):
@@ -122,5 +121,4 @@ if __name__ == '__main__':
     for entry in bib_entries:
         output.append(orgmode_from_bibentry(entry))
     output = '\n'.join(output)
-    pyperclip.copy(output)
     print(output)
