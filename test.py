@@ -34,7 +34,7 @@ class BasicTest(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         with open('test_data/output.org', 'r') as f:
-            self.expected = ''.join(f.readlines()).strip()
+            self.expected = f.read().strip()
         self.create_config()
 
     def test_doi(self):
