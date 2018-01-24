@@ -3,8 +3,38 @@
 import sys
 import requests
 import re
+import os
+import yaml
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
+
+CONFIG_FILE = '.doirc'
+
+def _find_config_file(dirname):
+    filepath = os.path.join(dirname, CONFIG_FILE)
+    if os.path.isfile(filepath):
+        return filepath
+    newpath = os.path.dirname(dirname)
+    if newpath == dirname: # root directory
+        raise FileNotFoundError('No %s file.' % CONFIG_FILE)
+    return _find_config_file(newpath)
+
+def find_config_file():
+    return _find_config_file(os.getcwd())
+
+class ConfigError(Exception):
+    pass
+
+def get_config():
+    config_file = find_config_file()
+    with open(config_file, 'r') as f:
+        config = yaml.load(f)
+    if 'orgfile' not in config:
+        raise ConfigError('No orgfile defined in the config file.')
+    orgfile = config['orgfile']
+    if not os.path.isfile(orgfile):
+        raise ConfigError('Orgfile %s does not exist.' % orgfile)
+    return config
 
 class CustomWriter(Writer):
     '''

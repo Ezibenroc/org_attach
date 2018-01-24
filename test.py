@@ -5,7 +5,9 @@ import random
 import functools
 import os
 import sys
+import yaml
 from subprocess import Popen, PIPE
+from doi_to_org import *
 
 class BasicTest(unittest.TestCase):
     def run_prog(self, *args):
@@ -51,6 +53,47 @@ class BasicTest(unittest.TestCase):
             f.write(bibtex)
         second_output = self.run_prog('/tmp/test_doi.bib')
         self.assertEqual(first_output, second_output)
+
+class ConfigTest(unittest.TestCase):
+    def setUp(self):
+        self.orgfile = os.path.join(os.getcwd(), 'foo.org')
+        with open(self.orgfile, 'w') as f:
+            f.write('hello world!')
+
+    def tearDown(self):
+        os.remove(CONFIG_FILE)
+        os.remove(self.orgfile)
+
+    def test_find_file(self):
+        with self.assertRaises(FileNotFoundError):
+            find_config_file()
+        with open(CONFIG_FILE, 'w') as f:
+            f.write('hello: world\n')
+        expected = os.path.join(os.getcwd(), CONFIG_FILE)
+        self.assertEqual(expected, find_config_file())
+
+    def create_config_file(self, config):
+        with open(CONFIG_FILE, 'w') as f:
+            yaml.dump(config, f)
+
+    def test_get_correct_config(self):
+        config = {'orgfile': self.orgfile}
+        self.create_config_file(config)
+        real_config = get_config()
+        self.assertEqual(config, real_config)
+
+    def test_get_config_wrongfile(self):
+        config = {'orgfile': self.orgfile + 'some_other_str'}
+        self.create_config_file(config)
+        with self.assertRaises(ConfigError):
+            get_config()
+
+    def test_get_config_wrongkey(self):
+        config = {'foo' : self.orgfile}
+        self.create_config_file(config)
+        with self.assertRaises(ConfigError):
+            get_config()
+
 
 if __name__ == "__main__":
     unittest.main()
