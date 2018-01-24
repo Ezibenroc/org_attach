@@ -5,6 +5,8 @@ import requests
 import re
 import os
 import yaml
+import hashlib
+import shutil
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 
@@ -106,25 +108,25 @@ def generic_get_bibtex(arg):
 def generic_get_bib(arg):
     return bib_from_bibtex(generic_get_bibtex(arg))
 
-def process_args(args):
+def generic_get_file(arg):
+    assert os.path.isfile(arg)
+    return arg # TODO we suppose the arg is always a file path here, but maybe we could download it?
+
+def process_args(args, attach=False):
     entries = []
     for arg in args:
+        if attach:
+            arg, file_arg = arg.split(',')
         new_entries = split_bib(generic_get_bib(arg))
-        entries.extend(new_entries)
+        if attach:
+            if len(new_entries) != 1:
+                sys.exit('Error: several bib entries found for %s, but only one attachment' % args)
+            else:
+                file_path = generic_get_file(file_arg)
+                entries.append((new_entries[0], file_path))
+        else:
+            entries.extend([(e, None) for e in new_entries])
     return entries
-
-org_str = '''**** UNREAD {title}\t:PAPER:
-:PROPERTIES:
-:DOI: {doi}
-:URL: {url}
-:AUTHORS: {authors}
-:END:
-***** Summary
-***** Notes
-***** Open Questions [/]
-***** BibTeX
-#+BEGIN_SRC bib :tangle bibliography.bib
-{bibtex}#+END_SRC'''
 
 def get_entry(bib): # suppose one and only one entry
     return bib.entries.values()[0]
@@ -162,9 +164,45 @@ def get_authors(bib):
         names.append(format_person(person))
     return ', '.join(names)
 
+def crypto_hash(filename):
+# https://stackoverflow.com/a/3431838/4110059
+    h = hashlib.sha512()
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
 trailing_white_spaces_reg = re.compile('\s*\n') # to remove the whitespaces at the end of the lines
 
-def orgmode_from_bibentry(bib):
+def attach_file(attached_file, org_file):
+    file_hash = crypto_hash(attached_file)
+    file_name = os.path.split(attached_file)[1]
+    org_dir = os.path.dirname(org_file)
+    data_dir = os.path.join(org_dir, 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    first_level_dir = os.path.join(data_dir, file_hash[:2])
+    os.makedirs(first_level_dir, exist_ok=True)
+    last_level_dir = os.path.join(first_level_dir, file_hash[2:])
+    os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
+    shutil.copyfile(attached_file, os.path.join(last_level_dir, file_name))
+    return file_name, file_hash
+
+def orgmode_from_bibentry(bib, attached_file_name=None, attached_file_hash=None):
+    header = '**** UNREAD {title}\t:PAPER:'
+    properties = [':DOI: {doi}', ':URL: {url}', ':AUTHORS: {authors}']
+    if attached_file_name is not None:
+        header += 'ATTACH:'
+        properties.extend([':Attachments: %s' % attached_file_name, ':ID: %s' % attached_file_hash])
+    org_str = '''%s
+:PROPERTIES:
+%s
+:END:
+***** Summary
+***** Notes
+***** Open Questions [/]
+***** BibTeX
+#+BEGIN_SRC bib :tangle bibliography.bib
+{bibtex}#+END_SRC''' % (header, '\n'.join(properties))
     title = get_title(bib)
     authors = get_authors(bib)
     doi = get_doi(bib)
@@ -179,19 +217,29 @@ def orgmode_from_bibentry(bib):
     ))
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        sys.exit('Syntax: %s <doi>' % sys.argv[0])
+    if len(sys.argv) < 2 or sys.argv[1] == '--attach' and len(sys.argv) == 2:
+        sys.exit('Syntax: %s <doi>\n')
+    attach = sys.argv[1] == '--attach'
+    if attach:
+        args = sys.argv[2:]
+    else:
+        args = sys.argv[1:]
     try:
         config = get_config()
     except FileNotFoundError:
         sys.exit('No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
     except ConfigError as e:
         sys.exit('Error with the configuration file: %s' % e)
-    bib_entries = process_args(sys.argv[1:])
+    orgfile = config[CONFIG_ORGFILE_KEY]
+    bib_entries = process_args(args, attach)
     output = []
-    for entry in bib_entries:
-        output.append(orgmode_from_bibentry(entry))
+    for entry, attached_file in bib_entries:
+        if attach:
+            file_name, file_hash = attach_file(attached_file, orgfile)
+            output.append(orgmode_from_bibentry(entry, file_name, file_hash))
+        else:
+            output.append(orgmode_from_bibentry(entry))
     output = '\n'.join(output)
-    with open(config[CONFIG_ORGFILE_KEY], 'a') as f:
+    with open(orgfile, 'a') as f:
         f.write(output)
         f.write('\n')

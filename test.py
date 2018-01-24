@@ -6,10 +6,12 @@ import functools
 import os
 import sys
 import yaml
+import filecmp
+import shutil
 from subprocess import Popen, PIPE
 from doi_to_org import *
 
-class BasicTest(unittest.TestCase):
+class Util(unittest.TestCase):
     def run_prog(self, *args):
         cmd = ['./doi_to_org.py', *args]
         process = Popen(cmd, stdout=PIPE, stderr=PIPE)
@@ -41,6 +43,7 @@ class BasicTest(unittest.TestCase):
         output = self.run_prog(arg).strip()
         self.assertEqual(output, expected_output)
 
+class BasicTest(Util):
     def test_doi(self):
         self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
 
@@ -115,6 +118,22 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(ConfigError):
             get_config()
 
+class AttachmentTest(Util):
+    def tearDown(self):
+        shutil.rmtree('data')
+
+    def generic_test(self, arg, attached_file, expected_attachment_path, expected_output_file):
+        with open(expected_output_file) as f:
+            expected_output = f.read().strip()
+        output = self.run_prog('--attach', '%s,%s' % (arg, attached_file)).strip()
+        self.assertEqual(output, expected_output)
+        self.assertTrue(os.path.isfile(expected_attachment_path))
+        self.assertTrue(filecmp.cmp(attached_file, expected_attachment_path))
+
+    def test_basic_attachment(self): # attaching knuth_input.bib
+        self.generic_test(arg='test_data/knuth_input.bib', attached_file='test_data/knuth_input.bib',
+                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/knuth_input.bib',
+                expected_output_file='test_data/knuth_output_attachment.org')
 
 if __name__ == "__main__":
     unittest.main()
