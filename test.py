@@ -33,22 +33,22 @@ class BasicTest(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        with open('test_data/output.org', 'r') as f:
-            self.expected = f.read().strip()
         self.create_config()
 
+    def generic_test(self, arg, expected_output_file):
+        with open(expected_output_file) as f:
+            expected_output = f.read().strip()
+        output = self.run_prog(arg).strip()
+        self.assertEqual(output, expected_output)
+
     def test_doi(self):
-        with open('test_data/input.doi', 'r') as f:
-            doi = ''.join(f.readlines()).strip()
-        output = self.run_prog(doi).strip()
-        self.assertEqual(output, self.expected)
+        self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
 
     def test_bibtex(self):
-        output = self.run_prog('test_data/input.bib').strip()
-        self.assertEqual(output, self.expected)
+        self.generic_test('test_data/knuth_input.bib', 'test_data/knuth_output.org')
 
     def test_fixpoint(self):
-        first_output = self.run_prog('test_data/input.bib')
+        first_output = self.run_prog('test_data/knuth_input.bib')
         splitted = first_output.split('\n')
         bibtex = []
         in_src = False
