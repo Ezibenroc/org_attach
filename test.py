@@ -17,12 +17,25 @@ class BasicTest(unittest.TestCase):
         if process.wait() != 0:
             sys.stderr.write('with command: %s\nstdout: %s\nstderr: %s\n' % (' '.join(args), output[0].decode('utf8'), output[1].decode('utf8')))
             self.assertTrue(False)
-        return output[0].decode('utf8')
+        with open(self.orgfile) as f:
+            return f.read()
+
+    def create_config(self):
+        self.orgfile = os.path.join(os.getcwd(), 'foo.org')
+        with open(self.orgfile, 'w') as f:
+            f.write('')
+        with open(CONFIG_FILE, 'w') as f:
+            yaml.dump({CONFIG_ORGFILE_KEY : self.orgfile}, f)
+
+    def tearDown(self):
+        os.remove(CONFIG_FILE)
+        os.remove(self.orgfile)
 
     def setUp(self):
         self.maxDiff = None
         with open('test_data/output.org', 'r') as f:
             self.expected = ''.join(f.readlines()).strip()
+        self.create_config()
 
     def test_doi(self):
         with open('test_data/input.doi', 'r') as f:
@@ -51,6 +64,8 @@ class BasicTest(unittest.TestCase):
         bibtex = '\n'.join(bibtex)
         with open('/tmp/test_doi.bib', 'w') as f:
             f.write(bibtex)
+        with open(self.orgfile, 'w') as f: # clearing the file...
+            f.write('')
         second_output = self.run_prog('/tmp/test_doi.bib')
         self.assertEqual(first_output, second_output)
 
@@ -77,13 +92,13 @@ class ConfigTest(unittest.TestCase):
             yaml.dump(config, f)
 
     def test_get_correct_config(self):
-        config = {'orgfile': self.orgfile}
+        config = {CONFIG_ORGFILE_KEY: self.orgfile}
         self.create_config_file(config)
         real_config = get_config()
         self.assertEqual(config, real_config)
 
     def test_get_config_wrongfile(self):
-        config = {'orgfile': self.orgfile + 'some_other_str'}
+        config = {CONFIG_ORGFILE_KEY: self.orgfile + 'some_other_str'}
         self.create_config_file(config)
         with self.assertRaises(ConfigError):
             get_config()

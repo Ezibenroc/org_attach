@@ -7,6 +7,11 @@ pip3 install --user pybtex
 git clone https://github.com/Ezibenroc/DOI_to_org.git
 ```
 
+Create a file `.doirc` in your working directory or one of its parent directories. The syntax of this file is:
+```yaml
+orgfile: /path/to/your/org/file
+```
+
 ## Usage
 
 ```sh
@@ -15,7 +20,7 @@ python3 doi_to_org.py ARG1 ARG2 ARG3 ARG4 ...
 
 Each argument can either be a DOI or the path to a bibtex file.
 
-It will print the result to the terminal.
+It will append the result to the org file that is specified in the `.doirc` file.
 
 Example:
 ```sh

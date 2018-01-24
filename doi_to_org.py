@@ -9,6 +9,7 @@ import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 
 CONFIG_FILE = '.doirc'
+CONFIG_ORGFILE_KEY = 'orgfile'
 
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
@@ -29,11 +30,11 @@ def get_config():
     config_file = find_config_file()
     with open(config_file, 'r') as f:
         config = yaml.load(f)
-    if 'orgfile' not in config:
-        raise ConfigError('No orgfile defined in the config file.')
-    orgfile = config['orgfile']
+    if CONFIG_ORGFILE_KEY not in config:
+        raise ConfigError('No %s defined in the configuration file.' % CONFIG_ORGFILE_KEY)
+    orgfile = config[CONFIG_ORGFILE_KEY]
     if not os.path.isfile(orgfile):
-        raise ConfigError('Orgfile %s does not exist.' % orgfile)
+        raise ConfigError('%s %s does not exist.' % (CONFIG_ORGFILE_KEY, orgfile))
     return config
 
 class CustomWriter(Writer):
@@ -159,9 +160,17 @@ def orgmode_from_bibentry(bib):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit('Syntax: %s <doi>' % sys.argv[0])
+    try:
+        config = get_config()
+    except FileNotFoundError:
+        sys.exit('No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
+    except ConfigError as e:
+        sys.exit('Error with the configuration file: %s' % e)
     bib_entries = process_args(sys.argv[1:])
     output = []
     for entry in bib_entries:
         output.append(orgmode_from_bibentry(entry))
     output = '\n'.join(output)
-    print(output)
+    with open(config[CONFIG_ORGFILE_KEY], 'a') as f:
+        f.write(output)
+        f.write('\n')
