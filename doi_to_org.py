@@ -7,6 +7,7 @@ import os
 import yaml
 import hashlib
 import shutil
+import tempfile
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 
@@ -108,9 +109,27 @@ def generic_get_bibtex(arg):
 def generic_get_bib(arg):
     return bib_from_bibtex(generic_get_bibtex(arg))
 
+class FileError(Exception):
+    pass
+
+def file_from_url(url):
+    try:
+        req = requests.get(url)
+    except requests.exceptions.MissingSchema:
+        raise FileError('Wrong URL.')
+    if req.status_code != 200:
+        raise FileError('Wrong URL.')
+    f = tempfile.NamedTemporaryFile()
+    f.file.write(req.content)
+    return f.name,f
+
 def generic_get_file(arg):
-    assert os.path.isfile(arg)
-    return arg # TODO we suppose the arg is always a file path here, but maybe we could download it?
+    if os.path.isfile(arg):
+        return arg,None
+    try:
+        return file_from_url(arg)
+    except FileError:
+        raise FileError('Argument %s is not an understandable format (not a path or a URL to a file, etc.).')
 
 def process_args(args, attach=False):
     entries = []
@@ -122,8 +141,8 @@ def process_args(args, attach=False):
             if len(new_entries) != 1:
                 sys.exit('Error: several bib entries found for %s, but only one attachment' % args)
             else:
-                file_path = generic_get_file(file_arg)
-                entries.append((new_entries[0], file_path))
+                file_tuple = generic_get_file(file_arg)
+                entries.append((new_entries[0], file_tuple))
         else:
             entries.extend([(e, None) for e in new_entries])
     return entries
@@ -174,9 +193,8 @@ def crypto_hash(filename):
 
 trailing_white_spaces_reg = re.compile('\s*\n') # to remove the whitespaces at the end of the lines
 
-def attach_file(attached_file, org_file):
+def attach_file(attached_file, org_file, file_name):
     file_hash = crypto_hash(attached_file)
-    file_name = os.path.split(attached_file)[1]
     org_dir = os.path.dirname(org_file)
     data_dir = os.path.join(org_dir, 'data')
     os.makedirs(data_dir, exist_ok=True)
@@ -185,7 +203,7 @@ def attach_file(attached_file, org_file):
     last_level_dir = os.path.join(first_level_dir, file_hash[2:])
     os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
     shutil.copyfile(attached_file, os.path.join(last_level_dir, file_name))
-    return file_name, file_hash
+    return file_hash
 
 def orgmode_from_bibentry(bib, attached_file_name=None, attached_file_hash=None):
     header = '**** UNREAD {title}\t:PAPER:'
@@ -216,6 +234,13 @@ def orgmode_from_bibentry(bib, attached_file_name=None, attached_file_hash=None)
             bibtex=bibtex,
     ))
 
+def generate_file_name(old_name, entry):
+    title = get_title(entry)
+    extension = os.path.splitext(old_name)[1]
+    if extension == '':
+        extension = '.pdf' # PDF by default?
+    return title.replace(' ', '_') + extension
+
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] == '--attach' and len(sys.argv) == 2:
         sys.exit('Syntax: %s <doi>\n')
@@ -235,8 +260,12 @@ if __name__ == '__main__':
     output = []
     for entry, attached_file in bib_entries:
         if attach:
-            file_name, file_hash = attach_file(attached_file, orgfile)
+            name, obj = attached_file
+            file_name = generate_file_name(name, entry)
+            file_hash = attach_file(name, orgfile, file_name)
             output.append(orgmode_from_bibentry(entry, file_name, file_hash))
+            if obj is not None:
+                obj.close()
         else:
             output.append(orgmode_from_bibentry(entry))
     output = '\n'.join(output)

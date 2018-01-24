@@ -132,7 +132,7 @@ class AttachmentTest(Util):
 
     def test_basic_attachment(self): # attaching knuth_input.bib
         self.generic_test(arg='test_data/knuth_input.bib', attached_file='test_data/knuth_input.bib',
-                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/knuth_input.bib',
+                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/Fast_Pattern_Matching_in_Strings.bib',
                 expected_output_file='test_data/knuth_output_attachment.org')
 
 if __name__ == "__main__":
