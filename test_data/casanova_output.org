@@ -1,0 +1,28 @@
+**** UNREAD Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms	:PAPER:
+:PROPERTIES:
+:DOI: 10.1016/j.jpdc.2014.06.008
+:URL: https://hal.inria.fr/hal-01017319
+:AUTHORS: Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter
+:END:
+***** Summary
+***** Notes
+***** Open Questions [/]
+***** BibTeX
+#+BEGIN_SRC bib :tangle bibliography.bib
+@article{casanova:hal-01017319,
+    AUTHOR = "Casanova, Henri and Giersch, Arnaud and Legrand, Arnaud and Quinson, Martin and Suter, Fr{\'e}d{\'e}ric",
+    TITLE = "{Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms}",
+    URL = "https://hal.inria.fr/hal-01017319",
+    JOURNAL = "{Journal of Parallel and Distributed Computing}",
+    PUBLISHER = "{Elsevier}",
+    VOLUME = "74",
+    NUMBER = "10",
+    PAGES = "2899-2917",
+    YEAR = "2014",
+    MONTH = "June",
+    DOI = "10.1016/j.jpdc.2014.06.008",
+    PDF = "https://hal.inria.fr/hal-01017319/file/simgrid3-journal.pdf",
+    HAL_ID = "hal-01017319",
+    HAL_VERSION = "v2"
+}
+#+END_SRC

@@ -47,6 +47,12 @@ class BasicTest(unittest.TestCase):
     def test_bibtex(self):
         self.generic_test('test_data/knuth_input.bib', 'test_data/knuth_output.org')
 
+    def test_url(self):
+        self.generic_test('https://hal.inria.fr/hal-01017319v2/bibtex', 'test_data/casanova_output.org')
+
+    def test_hal(self):
+        self.generic_test('hal-01017319v2', 'test_data/casanova_output.org')
+
     def test_fixpoint(self):
         first_output = self.run_prog('test_data/knuth_input.bib')
         splitted = first_output.split('\n')
