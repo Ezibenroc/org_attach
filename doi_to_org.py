@@ -48,30 +48,40 @@ class CustomWriter(Writer):
     def _encode(self, text):
         return text
 
+def bibtex_from_url(url, head=None):
+    try:
+        req = requests.get(url, headers=head)
+    except requests.exceptions.MissingSchema:
+        raise BibError('Wrong URL and/or header.')
+    if req.status_code != 200:
+        raise BibError('Wrong URL and/or header.')
+    return req.text
+
 # Note: to get a JSON instead of a bibtex entry, use head = {'Accept': 'application/vnd.citationstyles.csl+json'}
 def bibtex_from_doi(doi):
     url = 'http://dx.doi.org/%s' % doi
     head = {'Accept': 'application/x-bibtex'}
-    req = requests.get(url, headers=head)
-    assert req.status_code == 200
-    return req.text
+    return bibtex_from_url(url, head)
+
+def bibtex_from_halid(hal):
+    url = 'https://hal.archives-ouvertes.fr/%s/bibtex' % hal
+    return bibtex_from_url(url)
+
+def bibtex_from_file(filename):
+    try:
+        with open(filename) as f:
+            return f.read()
+    except FileNotFoundError:
+        raise BibError('Unknown file: %s' % filename)
 
 class BibError(Exception):
     pass
 
-def bib_from_doi(doi):
-    bib = pybtex.database.parse_string(bibtex_from_doi(doi), bib_format='bibtex')
+def bib_from_bibtex(bibtex):
+    bib = pybtex.database.parse_string(bibtex, bib_format='bibtex')
     if len(bib.entries) == 0:
-        raise BibError('Unknown doi: %s' % doi)
-    assert len(bib.entries) == 1
+        raise BibError('Wrong bibtex, no entries.')
     return bib
-
-def bib_from_file(filename):
-    try:
-        with open(filename) as f:
-            return pybtex.database.parse_file(f, bib_format='bibtex')
-    except FileNotFoundError:
-        raise BibError('Unknown file: %s' % filename)
 
 def split_bib(bib):
     entries = []
@@ -79,17 +89,28 @@ def split_bib(bib):
         entries.append(pybtex.database.BibliographyData({key : value}))
     return entries
 
+def generic_get_bibtex(arg):
+    functions = [
+            bibtex_from_file,
+            bibtex_from_doi,
+            bibtex_from_url,
+            bibtex_from_halid,
+    ]
+    for func in functions:
+        try:
+            return func(arg)
+        except BibError:
+            continue
+    raise BibError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
+
+def generic_get_bib(arg):
+    return bib_from_bibtex(generic_get_bibtex(arg))
+
 def process_args(args):
     entries = []
     for arg in args:
-        try: # is this a bibtex file ?
-            subentries = split_bib(bib_from_file(arg))
-        except BibError: # apparently not, maybe a DOI?
-            try:
-                subentries = [bib_from_doi(arg)]
-            except (BibError, AssertionError): # ok, don't know what this is...
-                sys.exit('Error with argument %s: neither a bibtex file nor a DOI.' % arg)
-        entries.extend(subentries)
+        new_entries = split_bib(generic_get_bib(arg))
+        entries.extend(new_entries)
     return entries
 
 org_str = '''**** UNREAD {title}\t:PAPER:

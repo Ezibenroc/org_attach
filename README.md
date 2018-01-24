@@ -18,7 +18,7 @@ orgfile: /path/to/your/org/file
 python3 doi_to_org.py ARG1 ARG2 ARG3 ARG4 ...
 ```
 
-Each argument can either be a DOI or the path to a bibtex file.
+Each argument can either be a DOI, the path to a bibtex file, the URL to a bibtex file or a HAL identifier.
 
 It will append the result to the org file that is specified in the `.doirc` file.
 
