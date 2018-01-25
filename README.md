@@ -4,6 +4,7 @@
 
 ```sh
 pip3 install --user pybtex
+pip3 install --user python-magic
 git clone https://github.com/Ezibenroc/DOI_to_org.git
 ```
 
