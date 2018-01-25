@@ -116,3 +116,6 @@ python3 doi_to_org.py ARG1,FILE1 ARG2,FILE2 ARG3,FILE3 ARG4,FILE4 ...
 It will add an entry in the org-file for each of the arguments, as before. It will also attach
 the file FILEi to the entry that was added for ARGi. FILEi has to be the path to a file on the
 system or an URL to a file.
+
+Note that if an attachment file is not specified but the bibliographical entry has a `PDF` field,
+the script will try to download this PDF and attach it.
