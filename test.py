@@ -52,6 +52,7 @@ class BibEntryTest(unittest.TestCase):
         bib = bib_list[0]
         self.assertEqual(bib.doi, '10.1016/j.jpdc.2014.06.008')
         self.assertEqual(bib.url, 'https://hal.inria.fr/hal-01017319')
+        self.assertEqual(bib.pdf, 'https://hal.inria.fr/hal-01017319/file/simgrid3-journal.pdf')
         self.assertEqual(bib.title, 'Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms')
         import warnings
         with warnings.catch_warnings(): # calling the method plaintext() from pybtex causes a depreciation warning, but the proposed altednative does not work
