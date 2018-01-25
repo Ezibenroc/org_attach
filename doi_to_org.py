@@ -239,6 +239,11 @@ class OrgEntry:
         self.bibentry = bibentry
         self.orgfile = orgfile
         self.attachment = attachment
+        if not self.attachment: # no attachment specified, trying to grab it
+            try:
+                self.attachment = Attachment.from_arg(self.bibentry.pdf)
+            except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
+                pass
 
     def attach_file(self, file_name):
         file_hash = self.attachment.hash

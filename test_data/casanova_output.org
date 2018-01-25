@@ -1,8 +1,10 @@
-**** UNREAD Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms	:PAPER:
+**** UNREAD Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms	:PAPER:ATTACH:
 :PROPERTIES:
 :DOI: 10.1016/j.jpdc.2014.06.008
 :URL: https://hal.inria.fr/hal-01017319
 :AUTHORS: Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter
+:Attachments: Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf
+:ID: 383dfc5b8f7430248cadbfa116d8e3b430907fcb2909a7a0ff2442996d174c215b2635934e3d3260bcb5b111ea6b8ebeadc987cf2d70aff7737cd5302e22ce05
 :END:
 ***** Summary
 ***** Notes

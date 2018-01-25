@@ -66,12 +66,6 @@ class BasicCommandLineTest(Util):
     def test_bibtex(self):
         self.generic_test('test_data/knuth_input.bib', 'test_data/knuth_output.org')
 
-    def test_url(self):
-        self.generic_test('https://hal.inria.fr/hal-01017319v2/bibtex', 'test_data/casanova_output.org')
-
-    def test_hal(self):
-        self.generic_test('hal-01017319v2', 'test_data/casanova_output.org')
-
     def test_fixpoint(self):
         first_output = self.run_prog('test_data/knuth_input.bib')
         splitted = first_output.split('\n')
@@ -138,18 +132,32 @@ class AttachmentTest(Util):
     def tearDown(self):
         shutil.rmtree('data')
 
-    def generic_test(self, arg, attached_file, expected_attachment_path, expected_output_file):
+    def generic_test(self, args, file_hash, file_name, expected_output_file):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
-        output = self.run_prog('%s,%s' % (arg, attached_file)).strip()
+        output = self.run_prog('%s' % (','.join(args))).strip()
         self.assertEqual(output, expected_output)
-        self.assertTrue(os.path.isfile(expected_attachment_path))
-        self.assertTrue(filecmp.cmp(attached_file, expected_attachment_path))
+        file_path = os.path.join('data', file_hash[:2], file_hash[2:], file_name)
+        self.assertTrue(os.path.isfile(file_path))
+        self.assertEqual(Attachment.crypto_hash(file_path), file_hash)
 
     def test_basic_attachment(self): # attaching knuth_input.bib
-        self.generic_test(arg='test_data/knuth_input.bib', attached_file='test_data/knuth_input.bib',
-                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/Fast_Pattern_Matching_in_Strings.txt',
+        self.generic_test(args=['test_data/knuth_input.bib', 'test_data/knuth_input.bib'],
+                file_hash = '37f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49',
+                file_name = 'Fast_Pattern_Matching_in_Strings.txt',
                 expected_output_file='test_data/knuth_output_attachment.org')
+
+    def test_url(self):
+        self.generic_test(args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
+                file_hash = '383dfc5b8f7430248cadbfa116d8e3b430907fcb2909a7a0ff2442996d174c215b2635934e3d3260bcb5b111ea6b8ebeadc987cf2d70aff7737cd5302e22ce05',
+                file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
+                expected_output_file = 'test_data/casanova_output.org')
+
+    def test_hal(self):
+        self.generic_test(args=['hal-01017319v2'],
+                file_hash = '383dfc5b8f7430248cadbfa116d8e3b430907fcb2909a7a0ff2442996d174c215b2635934e3d3260bcb5b111ea6b8ebeadc987cf2d70aff7737cd5302e22ce05',
+                file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
+                expected_output_file = 'test_data/casanova_output.org')
 
 if __name__ == "__main__":
     unittest.main()
