@@ -161,7 +161,6 @@ def get_doi(bib):
 
 def get_bibtex(bib):
     return CustomWriter().to_string(bib)
-    return bib.to_string('bibtex')
 
 def get_url(bib):
     try:
