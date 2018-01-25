@@ -43,7 +43,22 @@ class Util(unittest.TestCase):
         output = self.run_prog(arg).strip()
         self.assertEqual(output, expected_output)
 
-class BasicTest(Util):
+class BibEntryTest(unittest.TestCase):
+    def test_basic(self):
+        with open('test_data/casanova_input.bib') as f:
+            bibtex = f.read()
+        bib_list = BibEntry.from_bibtex(bibtex)
+        self.assertEqual(len(bib_list), 1)
+        bib = bib_list[0]
+        self.assertEqual(bib.doi, '10.1016/j.jpdc.2014.06.008')
+        self.assertEqual(bib.url, 'https://hal.inria.fr/hal-01017319')
+        self.assertEqual(bib.title, 'Versatile, Scalable, and Accurate Simulation of Distributed Applications and Platforms')
+        import warnings
+        with warnings.catch_warnings(): # calling the method plaintext() from pybtex causes a depreciation warning, but the proposed altednative does not work
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            self.assertEqual(bib.authors, 'Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter')
+
+class BasicCommandLineTest(Util):
     def test_doi(self):
         self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
 
@@ -125,14 +140,14 @@ class AttachmentTest(Util):
     def generic_test(self, arg, attached_file, expected_attachment_path, expected_output_file):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
-        output = self.run_prog('--attach', '%s,%s' % (arg, attached_file)).strip()
+        output = self.run_prog('%s,%s' % (arg, attached_file)).strip()
         self.assertEqual(output, expected_output)
         self.assertTrue(os.path.isfile(expected_attachment_path))
         self.assertTrue(filecmp.cmp(attached_file, expected_attachment_path))
 
     def test_basic_attachment(self): # attaching knuth_input.bib
         self.generic_test(arg='test_data/knuth_input.bib', attached_file='test_data/knuth_input.bib',
-                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/Fast_Pattern_Matching_in_Strings.bib',
+                expected_attachment_path='data/37/f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49/Fast_Pattern_Matching_in_Strings.txt',
                 expected_output_file='test_data/knuth_output_attachment.org')
 
 if __name__ == "__main__":
