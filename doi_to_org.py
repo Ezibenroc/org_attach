@@ -113,7 +113,10 @@ class BibEntry:
 
     @property
     def doi(self):
-        return str(self.bib.entries.values()[0].fields['doi'])
+        try:
+            return str(self.bib.entries.values()[0].fields['doi'])
+        except KeyError:
+            return ''
 
     @property
     def bibtex(self):
@@ -121,7 +124,10 @@ class BibEntry:
 
     @property
     def url(self):
-        return str(self.bib.entries.values()[0].fields['url'])
+        try:
+            return str(self.bib.entries.values()[0].fields['url'])
+        except KeyError:
+            return ''
 
     @property
     def pdf(self):
