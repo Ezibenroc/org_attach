@@ -14,6 +14,7 @@ import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 
 CONFIG_FILE = '.doirc'
+CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
 CONFIG_ORGFILE_KEY = 'orgfile'
 
 def _find_config_file(dirname):
@@ -22,6 +23,9 @@ def _find_config_file(dirname):
         return filepath
     newpath = os.path.dirname(dirname)
     if newpath == dirname: # root directory
+        filename = os.path.join(CONFIG_DIR, CONFIG_FILE)
+        if os.path.isfile(filename):
+            return filename
         raise FileNotFoundError('No %s file.' % CONFIG_FILE)
     return _find_config_file(newpath)
 
