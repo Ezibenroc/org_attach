@@ -146,7 +146,11 @@ class BibEntry:
             names = person.rich_first_names + person.rich_middle_names + person.rich_last_names
             return ' '.join([format_name(name) for name in names])
 
-        authors = self.bib.entries.values()[0].persons['author']
+        try:
+            authors = self.bib.entries.values()[0].persons['author']
+        except KeyError:
+            raise MissingAuthorError("Stopping at bibtex entry '%s' because it had no 'author' field." % (self.bib.entries.keys()[0]))
+
         names = []
         for person in authors:
             names.append(format_person(person))
@@ -169,6 +173,12 @@ class BibError(Exception):
 
 class FileError(Exception):
     pass
+
+class MissingAuthorError(KeyError):
+    '''Raise when a bibtex entry is missing the "author" field'''
+    def __init__(self, message, *args):
+        self.message = message
+        super(MissingAuthorError, self).__init__(message, *args)
 
 class Attachment:
     def __init__(self, temporary_file):
@@ -255,8 +265,7 @@ class OrgEntry:
             except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
                 pass
 
-    def attach_file(self, file_name):
-        file_hash = self.attachment.hash
+    def attach_file(self, file_name, file_hash):
         org_dir = os.path.dirname(self.orgfile)
         data_dir = os.path.join(org_dir, 'data')
         os.makedirs(data_dir, exist_ok=True)
@@ -265,7 +274,6 @@ class OrgEntry:
         last_level_dir = os.path.join(first_level_dir, file_hash[2:])
         os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
         self.attachment.move_to(os.path.join(last_level_dir, file_name))
-        return file_hash
 
     def orgmode_from_bibentry(self, attached_file_name=None, attached_file_hash=None):
         header = '**** UNREAD {title}\t:PAPER:'
@@ -283,11 +291,16 @@ class OrgEntry:
 ***** BibTeX
 #+BEGIN_SRC bib :tangle bibliography.bib
 {bibtex}#+END_SRC''' % (header, '\n'.join(properties))
+        try:
+            authors = self.bibentry.authors
+        except MissingAuthorError as e:
+            sys.exit(e.message)
+
         return self.trailing_white_spaces_reg.sub('\n', org_str.format(
                 title=  self.bibentry.title,
                 doi=    self.bibentry.doi,
                 url=    self.bibentry.url,
-                authors=self.bibentry.authors,
+                authors=authors,
                 bibtex= self.bibentry.bibtex,
         ))
 
@@ -297,11 +310,13 @@ class OrgEntry:
     def add_entry(self):
         if self.attachment:
             attachment_name = self.generate_attachment_file_name()
-            attachment_hash = self.attach_file(attachment_name)
+            attachment_hash = self.attachment.hash
         else:
             attachment_name = None
             attachment_hash = None
         org_txt = self.orgmode_from_bibentry(attachment_name, attachment_hash)
+        if self.attachment:
+            self.attach_file(attachment_name, attachment_hash)
         with open(self.orgfile, 'a') as f:
             f.write(org_txt)
             f.write('\n')

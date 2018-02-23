@@ -59,6 +59,16 @@ class BibEntryTest(unittest.TestCase):
             warnings.filterwarnings("ignore", category=DeprecationWarning)
             self.assertEqual(bib.authors, 'Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter')
 
+    def test_missing_author(self):
+        with open('test_data/casanova_missing_author_input.bib') as f:
+            bibtex = f.read()
+
+        bib_list = BibEntry.from_bibtex(bibtex)
+        org_entry = OrgEntry("", bib_list[0], attachment = True)
+
+        with self.assertRaises(SystemExit):
+           org_entry.orgmode_from_bibentry()
+
 class BasicCommandLineTest(Util):
     def test_doi(self):
         self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
@@ -149,13 +159,13 @@ class AttachmentTest(Util):
 
     def test_url(self):
         self.generic_test(args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
-                file_hash = '383dfc5b8f7430248cadbfa116d8e3b430907fcb2909a7a0ff2442996d174c215b2635934e3d3260bcb5b111ea6b8ebeadc987cf2d70aff7737cd5302e22ce05',
+                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 
     def test_hal(self):
         self.generic_test(args=['hal-01017319v2'],
-                file_hash = '383dfc5b8f7430248cadbfa116d8e3b430907fcb2909a7a0ff2442996d174c215b2635934e3d3260bcb5b111ea6b8ebeadc987cf2d70aff7737cd5302e22ce05',
+                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 
