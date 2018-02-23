@@ -146,7 +146,11 @@ class BibEntry:
             names = person.rich_first_names + person.rich_middle_names + person.rich_last_names
             return ' '.join([format_name(name) for name in names])
 
-        authors = self.bib.entries.values()[0].persons['author']
+        try:
+            authors = self.bib.entries.values()[0].persons['author']
+        except KeyError:
+            raise MissingAuthorError("Stopping at bibtex entry '%s' because it had no 'author' field." % (self.bib.entries.keys()[0]))
+
         names = []
         for person in authors:
             names.append(format_person(person))
@@ -283,11 +287,16 @@ class OrgEntry:
 ***** BibTeX
 #+BEGIN_SRC bib :tangle bibliography.bib
 {bibtex}#+END_SRC''' % (header, '\n'.join(properties))
+        try:
+            authors = self.bibentry.authors
+        except MissingAuthorError as e:
+            sys.exit(e.message)
+
         return self.trailing_white_spaces_reg.sub('\n', org_str.format(
                 title=  self.bibentry.title,
                 doi=    self.bibentry.doi,
                 url=    self.bibentry.url,
-                authors=self.bibentry.authors,
+                authors=authors,
                 bibtex= self.bibentry.bibtex,
         ))
 
@@ -318,6 +327,12 @@ def org_entry_fabric(orgfile, arg):
         return [OrgEntry(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
     else:
         raise SyntaxError('Wrong argument format, got %s.' % arg)
+
+class MissingAuthorError(KeyError):
+    '''Raise when a bibtex entry is missing the "author" field'''
+    def __init__(self, message, *args):
+        self.message = message
+        super(MissingAuthorError, self).__init__(message, *args)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

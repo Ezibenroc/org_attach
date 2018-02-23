@@ -59,6 +59,16 @@ class BibEntryTest(unittest.TestCase):
             warnings.filterwarnings("ignore", category=DeprecationWarning)
             self.assertEqual(bib.authors, 'Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter')
 
+    def test_missing_author(self):
+        with open('test_data/casanova_missing_author_input.bib') as f:
+            bibtex = f.read()
+
+        bib_list = BibEntry.from_bibtex(bibtex)
+        org_entry = OrgEntry("", bib_list[0], attachment = True)
+
+        with self.assertRaises(SystemExit):
+           org_entry.orgmode_from_bibentry()
+
 class BasicCommandLineTest(Util):
     def test_doi(self):
         self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
