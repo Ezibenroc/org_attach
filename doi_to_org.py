@@ -259,8 +259,7 @@ class OrgEntry:
             except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
                 pass
 
-    def attach_file(self, file_name):
-        file_hash = self.attachment.hash
+    def attach_file(self, file_name, file_hash):
         org_dir = os.path.dirname(self.orgfile)
         data_dir = os.path.join(org_dir, 'data')
         os.makedirs(data_dir, exist_ok=True)
@@ -269,7 +268,6 @@ class OrgEntry:
         last_level_dir = os.path.join(first_level_dir, file_hash[2:])
         os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
         self.attachment.move_to(os.path.join(last_level_dir, file_name))
-        return file_hash
 
     def orgmode_from_bibentry(self, attached_file_name=None, attached_file_hash=None):
         header = '**** UNREAD {title}\t:PAPER:'
@@ -306,11 +304,13 @@ class OrgEntry:
     def add_entry(self):
         if self.attachment:
             attachment_name = self.generate_attachment_file_name()
-            attachment_hash = self.attach_file(attachment_name)
+            attachment_hash = self.attachment.hash
         else:
             attachment_name = None
             attachment_hash = None
         org_txt = self.orgmode_from_bibentry(attachment_name, attachment_hash)
+        if self.attachment:
+            self.attach_file(attachment_name, attachment_hash)
         with open(self.orgfile, 'a') as f:
             f.write(org_txt)
             f.write('\n')
