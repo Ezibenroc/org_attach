@@ -174,6 +174,12 @@ class BibError(Exception):
 class FileError(Exception):
     pass
 
+class MissingAuthorError(KeyError):
+    '''Raise when a bibtex entry is missing the "author" field'''
+    def __init__(self, message, *args):
+        self.message = message
+        super(MissingAuthorError, self).__init__(message, *args)
+
 class Attachment:
     def __init__(self, temporary_file):
         self.file = temporary_file
@@ -327,12 +333,6 @@ def org_entry_fabric(orgfile, arg):
         return [OrgEntry(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
     else:
         raise SyntaxError('Wrong argument format, got %s.' % arg)
-
-class MissingAuthorError(KeyError):
-    '''Raise when a bibtex entry is missing the "author" field'''
-    def __init__(self, message, *args):
-        self.message = message
-        super(MissingAuthorError, self).__init__(message, *args)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
