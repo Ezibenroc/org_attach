@@ -21,6 +21,13 @@ python3 doi_to_org.py ARG1 ARG2 ARG3 ARG4 ...
 
 Each argument can either be a DOI, the path to a bibtex file, the URL to a bibtex file or a HAL identifier.
 
+Typing `python3` everytime is tedious. We hence suggest that you install an alias somewhere in your $PATH, for instance like this:
+
+```sh
+ln -s <full-path-to-doi_to_org.py> ~/bin/doi2org
+```
+You can then simply type doi2org.
+
 It will append the result to the org file that is specified in the `.doirc` file.
 
 Example:
