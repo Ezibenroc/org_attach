@@ -12,6 +12,7 @@ Create a file `.doirc` in your working directory or one of its parent directorie
 ```yaml
 orgfile: /path/to/your/org/file
 ```
+You can also create a global configuration file in `~/.config/doi2org/.doirc`
 
 ## Basic usage
 
