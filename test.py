@@ -161,13 +161,13 @@ class AttachmentTest(Util):
 
     def test_url(self):
         self.generic_test(args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
-                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
+                file_hash = '18c9215f8facf4a6c789308dd73db1b504499046ca9b69f24015c9259509fd3e3d4f60dc5f5f97b9350da4f165f35d3d12092d2793edeb44a559cab46e4496ee',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 
     def test_hal(self):
         self.generic_test(args=['hal-01017319v2'],
-                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
+                file_hash = '18c9215f8facf4a6c789308dd73db1b504499046ca9b69f24015c9259509fd3e3d4f60dc5f5f97b9350da4f165f35d3d12092d2793edeb44a559cab46e4496ee',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 

@@ -4,7 +4,7 @@
 :URL: https://hal.inria.fr/hal-01017319
 :AUTHORS: Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter
 :Attachments: Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf
-:ID: dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc
+:ID: 18c9215f8facf4a6c789308dd73db1b504499046ca9b69f24015c9259509fd3e3d4f60dc5f5f97b9350da4f165f35d3d12092d2793edeb44a559cab46e4496ee
 :END:
 ***** Summary
 ***** Notes
