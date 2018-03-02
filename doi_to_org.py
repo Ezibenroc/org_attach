@@ -16,6 +16,7 @@ from pybtex.database.output.bibtex import Writer
 CONFIG_FILE = '.doirc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
 CONFIG_ORGFILE_KEY = 'orgfile'
+CONFIG_PDFPATH_KEY = 'pdfpath'
 
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
@@ -138,6 +139,10 @@ class BibEntry:
         return str(self.bib.entries.values()[0].fields['pdf'])
 
     @property
+    def key(self):
+        return str(self.bib.entries.keys()[0])
+
+    @property
     def authors(self):
         def format_name(name):
             return name.plaintext()
@@ -205,6 +210,20 @@ class Attachment:
         return f
 
     @classmethod
+    def tempfile_from_key(cls, path, key):
+        if not os.path.isdir(path):
+            raise FileError('Not a valid path.')
+
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith(".pdf") and file == "%s.pdf" % (key):
+                    f = tempfile.NamedTemporaryFile()
+                    shutil.copyfile(os.path.join(root, file), f.name)
+                    return f
+
+        sys.exit("Couldn't find file '%s.pdf' in '%s'" % (key, path))
+
+    @classmethod
     def tempfile_from_arg(cls, arg):
         functions = [
                 cls.tempfile_from_path,
@@ -220,6 +239,10 @@ class Attachment:
     @classmethod
     def from_arg(cls, arg):
         return cls(cls.tempfile_from_arg(arg))
+
+    @classmethod
+    def from_key(cls, path, key):
+        return cls(cls.tempfile_from_key(path, key))
 
     @property
     def path(self):
@@ -255,9 +278,10 @@ class Attachment:
 class OrgEntry:
     trailing_white_spaces_reg = re.compile('\s*\n') # to remove the whitespaces at the end of the lines
 
-    def __init__(self, orgfile, bibentry, attachment=None):
+    def __init__(self, orgfile, pdfpath, bibentry, attachment=None):
         self.bibentry = bibentry
         self.orgfile = orgfile
+        self.pdfpath = pdfpath
         self.attachment = attachment
         if not self.attachment: # no attachment specified, trying to grab it
             try:
@@ -305,7 +329,10 @@ class OrgEntry:
         ))
 
     def generate_attachment_file_name(self):
-        return self.bibentry.title.replace(' ', '_') + self.attachment.extension
+        if self.pdfpath:
+            return self.bibentry.key + self.attachment.extension
+        else:
+            return self.bibentry.title.replace(' ', '_') + self.attachment.extension
 
     def add_entry(self):
         if self.attachment:
@@ -321,16 +348,19 @@ class OrgEntry:
             f.write(org_txt)
             f.write('\n')
 
-def org_entry_fabric(orgfile, arg):
+def org_entry_fabric(orgfile, pdfpath, arg):
     arg_list = arg.split(',')
     bib_entries = BibEntry.from_arg(arg_list[0])
     if len(arg_list) == 1:
-        return [OrgEntry(orgfile, bib_entry) for bib_entry in bib_entries]
+        if pdfpath:
+            return [OrgEntry(orgfile, pdfpath, bib_entry, Attachment.from_key(pdfpath, bib_entry.key)) for bib_entry in bib_entries]
+        else:
+            return [OrgEntry(orgfile, pdfpath, bib_entry) for bib_entry in bib_entries]
     elif len(arg_list) == 2:
         if len(bib_entries) > 1:
             raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (arg_list[0], arg_list[1]))
         bib_entry = bib_entries[0]
-        return [OrgEntry(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
+        return [OrgEntry(orgfile, pdfpath, bib_entry, Attachment.from_arg(arg_list[1]))]
     else:
         raise SyntaxError('Wrong argument format, got %s.' % arg)
 
@@ -344,6 +374,9 @@ if __name__ == '__main__':
     except ConfigError as e:
         sys.exit('Error with the configuration file: %s' % e)
     orgfile = config[CONFIG_ORGFILE_KEY]
+    pdfpath = None
+    if CONFIG_PDFPATH_KEY in config:
+        pdfpath = config[CONFIG_PDFPATH_KEY]
     for arg in sys.argv[1:]:
-        for entry in org_entry_fabric(orgfile, arg):
+        for entry in org_entry_fabric(orgfile, pdfpath, arg):
             entry.add_entry()

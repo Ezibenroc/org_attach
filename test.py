@@ -64,7 +64,7 @@ class BibEntryTest(unittest.TestCase):
             bibtex = f.read()
 
         bib_list = BibEntry.from_bibtex(bibtex)
-        org_entry = OrgEntry("", bib_list[0], attachment = True)
+        org_entry = OrgEntry("", None, bib_list[0], attachment = True)
 
         with self.assertRaises(SystemExit):
            org_entry.orgmode_from_bibentry()
@@ -141,6 +141,8 @@ class ConfigTest(unittest.TestCase):
 class AttachmentTest(Util):
     def tearDown(self):
         shutil.rmtree('data')
+        if os.path.isfile(self.orgfile):
+            os.remove(self.orgfile)
 
     def generic_test(self, args, file_hash, file_name, expected_output_file):
         with open(expected_output_file) as f:
@@ -168,6 +170,21 @@ class AttachmentTest(Util):
                 file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
+
+    def test_pdfpath(self):
+        with open('test_data/casanova_local_pdf_input.bib') as f:
+            bibtex = f.read()
+
+        pdfpath = 'test_data/pdf'
+        orgfile = os.path.join(os.getcwd(), 'bar.org')
+
+        bib_list = BibEntry.from_bibtex(bibtex)
+        org_entry = OrgEntry(orgfile, pdfpath, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
+
+        org_entry.add_entry()
+        os.remove(orgfile)
+
+        self.assertTrue(os.path.isfile(pdfpath + "/casanova:hal-01017319.pdf"))
 
 if __name__ == "__main__":
     unittest.main()
