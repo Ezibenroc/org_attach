@@ -141,6 +141,8 @@ class ConfigTest(unittest.TestCase):
 class AttachmentTest(Util):
     def tearDown(self):
         shutil.rmtree('data')
+        if os.path.isfile(self.orgfile):
+            os.remove(self.orgfile)
 
     def generic_test(self, args, file_hash, file_name, expected_output_file):
         with open(expected_output_file) as f:
@@ -159,15 +161,51 @@ class AttachmentTest(Util):
 
     def test_url(self):
         self.generic_test(args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
-                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
+                file_hash = '095c324c84cc92722b52a2e87b63c638d052ea30397646bc4462ee84bca46412c574f89d636d1841d54eae2df7d33a545e97e204ed0147a84c1d89b7deb8081e',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 
     def test_hal(self):
         self.generic_test(args=['hal-01017319v2'],
-                file_hash = 'dd544b94ad42c98728e4b382e47fcb7fc6772bed5158c74e205ebe0c44e712e546a4dadfc17050eda5acb1dbb11dcc03a3b984d966104a9ef85f8a0263f27bfc',
+                file_hash = '095c324c84cc92722b52a2e87b63c638d052ea30397646bc4462ee84bca46412c574f89d636d1841d54eae2df7d33a545e97e204ed0147a84c1d89b7deb8081e',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
+
+    def test_pdfpath(self):
+        with open('test_data/casanova_local_pdf_input.bib') as f:
+            bibtex = f.read()
+
+        pdfpath = 'test_data/pdf'
+        orgfile = os.path.join(os.getcwd(), 'bar.org')
+
+        bib_list = BibEntry.from_bibtex(bibtex)
+        org_entry = OrgEntry(orgfile, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
+
+        org_entry.add_entry()
+        self.assertTrue(os.path.isfile("./data/2a" +
+            "/b880f480c6e2ef27a84f8e0fd36252ff444f970fe9dec88da2f77c744b85bd" +
+            "e4b5cfcf5fdea3286298945facd819af9a07e594f4850410ce7e909ac9c31e84/" +
+            "Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_" +
+            "Applications_and_Platforms.pdf"))
+
+        os.remove(orgfile)
+
+    def test_missing_file_pdfpath(self):
+        with open('test_data/knuth_input.bib') as f:
+            bibtex = f.read()
+
+        os.mkdir('data')
+
+        pdfpath = 'test_data'
+        orgfile = os.path.join(os.getcwd(), 'bar.org')
+
+        bib_list = BibEntry.from_bibtex(bibtex)
+
+        with self.assertRaises(FileNotFoundError):
+            attachment = Attachment.from_key(pdfpath, bib_list[0].key)
+
+            org_entry = OrgEntry(orgfile, bib_list[0], attachment)
+            org_entry.add_entry()
 
 if __name__ == "__main__":
     unittest.main()
