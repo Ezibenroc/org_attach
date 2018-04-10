@@ -221,7 +221,7 @@ class Attachment:
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
                     return temp_f
 
-        raise FileNotFoundError("Couldn't find file '%s.pdf' in '%s'" % (key, path))
+        raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
 
     @classmethod
     def tempfile_from_arg(cls, arg):
@@ -378,6 +378,5 @@ if __name__ == '__main__':
             for entry in org_entry_fabric(orgfile, pdfpath, arg):
                 entry.add_entry()
         except FileNotFoundError as e:
-            print(e)
-            sys.exit()
+            sys.exit(e)
 
