@@ -7,6 +7,7 @@ import os
 import yaml
 import hashlib
 import shutil
+from abc import ABC, abstractmethod
 import tempfile
 import mimetypes
 import magic            # https://pypi.python.org/pypi/python-magic/
@@ -275,18 +276,14 @@ class Attachment:
         except FileNotFoundError:
             pass
 
-class OrgEntry:
-    trailing_white_spaces_reg = re.compile('\s*\n') # to remove the whitespaces at the end of the lines
+class AbstractOrgEntry(ABC):
+    star_level = 4
 
-    def __init__(self, orgfile, bibentry, attachment=None):
-        self.bibentry = bibentry
+    def __init__(self, orgfile, attachment=None):
         self.orgfile = orgfile
         self.attachment = attachment
-        if not self.attachment: # no attachment specified, trying to grab it
-            try:
-                self.attachment = Attachment.from_arg(self.bibentry.pdf)
-            except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
-                pass
+        self.attached_file_name = None
+        self.attached_file_hash = None
 
     def attach_file(self, file_name, file_hash):
         org_dir = os.path.dirname(self.orgfile)
@@ -298,48 +295,115 @@ class OrgEntry:
         os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
         self.attachment.move_to(os.path.join(last_level_dir, file_name))
 
-    def orgmode_from_bibentry(self, attached_file_name=None, attached_file_hash=None):
-        header = '**** UNREAD {title}\t:PAPER:'
-        properties = [':DOI: {doi}', ':URL: {url}', ':AUTHORS: {authors}']
-        if attached_file_name is not None:
-            header += 'ATTACH:'
-            properties.extend([':Attachments: %s' % attached_file_name, ':ID: %s' % attached_file_hash])
-        org_str = '''%s
-:PROPERTIES:
-%s
-:END:
-***** Summary
-***** Notes
-***** Open Questions [/]
-***** BibTeX
-#+BEGIN_SRC bib :tangle bibliography.bib
-{bibtex}#+END_SRC''' % (header, '\n'.join(properties))
-        try:
-            authors = self.bibentry.authors
-        except MissingAuthorError as e:
-            sys.exit(e.message)
+    @property
+    @abstractmethod
+    def tags(self):
+        pass
 
-        return self.trailing_white_spaces_reg.sub('\n', org_str.format(
-                title=  self.bibentry.title,
-                doi=    self.bibentry.doi,
-                url=    self.bibentry.url,
-                authors=authors,
-                bibtex= self.bibentry.bibtex,
-        ))
+    @property
+    @abstractmethod
+    def todo(self):
+        pass
+
+    @property
+    @abstractmethod
+    def title(self):
+        pass
+
+    def header_str(self):
+        tags = self.tags
+        if self.attached_file_name:
+            tags.append('ATTACH')
+        tags = ':%s:' % ':'.join(tags)
+        header = ['*'*self.star_level, self.todo, self.title]
+        h= ' '.join(header) + '\t' + tags
+        return h
+
+    @property
+    @abstractmethod
+    def properties(self):
+        pass
+
+    def properties_str(self):
+        properties = []
+        all_prop = self.properties
+        if self.attached_file_name:
+            all_prop.append(('Attachments', self.attached_file_name))
+            all_prop.append(('ID',         self.attached_file_hash))
+        all_prop = [('PROPERTIES', None)] + all_prop + [('END', None)]
+        for prop_name, prop_val in all_prop:
+            prop = ':%s:' % prop_name
+            if prop_val:
+                prop = ' '.join([prop, str(prop_val)])
+            properties.append(prop)
+        return '\n'.join(properties)
+
+    @property
+    def sections(self):
+        return [('Summary', None), ('Notes', None), ('Open Questions [/]', None)]
+
+    def sections_str(self):
+        sections = []
+        for sect_name, sect_val in self.sections:
+            sect = ' '.join(['*'*(self.star_level+1), sect_name])
+            if sect_val:
+                sect = '\n'.join([sect, str(sect_val)])
+            sections.append(sect)
+        return '\n'.join(sections)
+
+    def orgmode_from_bibentry(self):
+        header     = self.header_str()
+        properties = self.properties_str()
+        sections   = self.sections_str()
+        return '\n'.join([header, properties, sections])
+
+class OrgEntry(AbstractOrgEntry):
+    def __init__(self, orgfile, bibentry, attachment=None):
+        super().__init__(orgfile, attachment)
+        self.bibentry = bibentry
+        if not self.attachment: # no attachment specified, trying to grab it
+            try:
+                self.attachment = Attachment.from_arg(self.bibentry.pdf)
+            except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
+                pass
+
+    @property
+    def tags(self):
+        return ['PAPER']
+
+    @property
+    def todo(self):
+        return 'UNREAD'
+
+    @property
+    def title(self):
+        return self.bibentry.title
+
+    @property
+    def properties(self):
+        try:
+            return [('DOI', self.bibentry.doi),
+                    ('URL', self.bibentry.url),
+                    ('AUTHORS', self.bibentry.authors),
+                   ]
+        except MissingAuthorError as e:
+            sys.exit(e)
+
+    @property
+    def sections(self):
+        bib = '#+BEGIN_SRC bib :tangle bibliography.bib\n%s#+END_SRC' % self.bibentry.bibtex
+        return super().sections + [('BibTeX', bib)]
 
     def generate_attachment_file_name(self):
         return self.bibentry.title.replace(' ', '_') + self.attachment.extension
 
     def add_entry(self):
         if self.attachment:
-            attachment_name = self.generate_attachment_file_name()
-            attachment_hash = self.attachment.hash
-        else:
-            attachment_name = None
-            attachment_hash = None
-        org_txt = self.orgmode_from_bibentry(attachment_name, attachment_hash)
+            self.attached_file_name = self.generate_attachment_file_name()
+            self.attached_file_hash = self.attachment.hash
+        org_txt = self.orgmode_from_bibentry()
         if self.attachment:
-            self.attach_file(attachment_name, attachment_hash)
+            self.attach_file(self.attached_file_name, self.attached_file_hash)
         with open(self.orgfile, 'a') as f:
             f.write(org_txt)
             f.write('\n')

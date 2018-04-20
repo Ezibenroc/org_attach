@@ -69,6 +69,46 @@ class BibEntryTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
            org_entry.orgmode_from_bibentry()
 
+class OrgEntryTest(unittest.TestCase):
+    class MockEntry(AbstractOrgEntry):
+        @property
+        def tags(self):
+            return ['tag1', 'tag2']
+
+        @property
+        def todo(self):
+            return 'todo'
+
+        @property
+        def title(self):
+            return 'title'
+
+        @property
+        def properties(self):
+            return [('property1', 12), ('property2', 'foo')]
+
+        @property
+        def sections(self):
+            return super().sections + [('mysection', 'bar')]
+
+    def test_noattach(self):
+        entry = self.MockEntry('orgfile')
+        self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:')
+        self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:END:')
+        self.assertEqual(entry.sections_str(), '***** Summary\n***** Notes\n***** Open Questions [/]\n***** mysection\nbar')
+        self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
+            entry.sections_str()]))
+
+    def test_attach(self):
+        entry = self.MockEntry('orgfile')
+        entry.attached_file_name = 'file.pdf'
+        entry.attached_file_hash = 'hash'
+        self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:ATTACH:')
+        self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:Attachments: file.pdf\n:ID: hash\n:END:')
+        self.assertEqual(entry.sections_str(), '***** Summary\n***** Notes\n***** Open Questions [/]\n***** mysection\nbar')
+        self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
+            entry.sections_str()]))
+
 class BasicCommandLineTest(Util):
     def test_doi(self):
         self.generic_test('10.1137/0206024', 'test_data/knuth_output.org')
