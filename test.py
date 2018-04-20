@@ -144,14 +144,28 @@ class AttachmentTest(Util):
         if os.path.isfile(self.orgfile):
             os.remove(self.orgfile)
 
+    def assert_output_equal(self, expected, real):
+        seen_id = False
+        for expected_line, real_line in zip(expected.split('\n'), real.split('\n')):
+            if expected_line.startswith(':ID:'):
+                self.assertFalse(seen_id)
+                self.assertTrue(real_line.startswith(':ID:'))
+                real_id = real_line.split(':ID:')[-1].strip()
+                seen_id = True
+            else:
+                self.assertEqual(expected_line, real_line)
+            if seen_id:
+                return real_id
+
+
     def generic_test(self, args, file_hash, file_name, expected_output_file):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
         output = self.run_prog('%s' % (','.join(args))).strip()
-        self.assertEqual(output, expected_output)
-        file_path = os.path.join('data', file_hash[:2], file_hash[2:], file_name)
+        real_id = self.assert_output_equal(expected=expected_output, real=output)
+        file_path = os.path.join('data', real_id[:2], real_id[2:], file_name)
         self.assertTrue(os.path.isfile(file_path))
-        self.assertEqual(Attachment.crypto_hash(file_path), file_hash)
+        self.assertEqual(Attachment.crypto_hash(file_path), real_id)
 
     def test_basic_attachment(self): # attaching knuth_input.bib
         self.generic_test(args=['test_data/knuth_input.bib', 'test_data/knuth_input.bib'],
