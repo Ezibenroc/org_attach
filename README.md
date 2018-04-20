@@ -1,10 +1,11 @@
 # Py\_doi
 
+[![Build Status](https://travis-ci.org/Ezibenroc/DOI_to_org.svg?branch=master)](https://travis-ci.org/Ezibenroc/DOI_to_org)
+
 ## Installation
 
 ```sh
-pip3 install --user pybtex
-pip3 install --user python-magic
+pip3 install --user pybtex python-magic requests
 git clone https://github.com/Ezibenroc/DOI_to_org.git
 ```
 
