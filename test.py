@@ -71,6 +71,10 @@ class BibEntryTest(unittest.TestCase):
 
 class OrgEntryTest(unittest.TestCase):
     class MockEntry(AbstractOrgEntry):
+        @classmethod
+        def fabric(self, orgfile, arg):
+            pass
+
         @property
         def tags(self):
             return ['tag1', 'tag2']

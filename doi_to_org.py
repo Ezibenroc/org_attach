@@ -285,6 +285,11 @@ class AbstractOrgEntry(ABC):
         self.attached_file_name = None
         self.attached_file_hash = None
 
+    @classmethod
+    @abstractmethod
+    def fabric(cls, orgfile, arg):
+        pass
+
     def attach_file(self, file_name, file_hash):
         org_dir = os.path.dirname(self.orgfile)
         data_dir = os.path.join(org_dir, 'data')
@@ -367,6 +372,23 @@ class OrgEntry(AbstractOrgEntry):
             except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
                 pass
 
+    @classmethod
+    def fabric(cls, orgfile, arg, pdfpath=None):
+        arg_list = arg.split(',')
+        bib_entries = BibEntry.from_arg(arg_list[0])
+        if len(arg_list) == 1:
+            if pdfpath:
+                return [cls(orgfile, bib_entry, Attachment.from_key(pdfpath, bib_entry.key)) for bib_entry in bib_entries]
+            else:
+                return [cls(orgfile, bib_entry) for bib_entry in bib_entries]
+        elif len(arg_list) == 2:
+            if len(bib_entries) > 1:
+                raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (arg_list[0], arg_list[1]))
+            bib_entry = bib_entries[0]
+            return [cls(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
+        else:
+            raise SyntaxError('Wrong argument format, got %s.' % arg)
+
     @property
     def tags(self):
         return ['PAPER']
@@ -408,22 +430,6 @@ class OrgEntry(AbstractOrgEntry):
             f.write(org_txt)
             f.write('\n')
 
-def org_entry_fabric(orgfile, pdfpath, arg):
-    arg_list = arg.split(',')
-    bib_entries = BibEntry.from_arg(arg_list[0])
-    if len(arg_list) == 1:
-        if pdfpath:
-            return [OrgEntry(orgfile, bib_entry, Attachment.from_key(pdfpath, bib_entry.key)) for bib_entry in bib_entries]
-        else:
-            return [OrgEntry(orgfile, bib_entry) for bib_entry in bib_entries]
-    elif len(arg_list) == 2:
-        if len(bib_entries) > 1:
-            raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (arg_list[0], arg_list[1]))
-        bib_entry = bib_entries[0]
-        return [OrgEntry(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
-    else:
-        raise SyntaxError('Wrong argument format, got %s.' % arg)
-
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit('Syntax: %s <doi>\n')
@@ -439,7 +445,7 @@ if __name__ == '__main__':
         pdfpath = config[CONFIG_PDFPATH_KEY]
     for arg in sys.argv[1:]:
         try:
-            for entry in org_entry_fabric(orgfile, pdfpath, arg):
+            for entry in OrgEntry.fabric(orgfile, arg, pdfpath=pdfpath):
                 entry.add_entry()
         except FileNotFoundError as e:
             sys.exit(e)
