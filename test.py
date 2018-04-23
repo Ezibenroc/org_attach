@@ -17,7 +17,7 @@ EXAMPLE_CONFIG = 'example_doirc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
-        cmd = ['./doi_to_org.py', *args]
+        cmd = ['./doi_to_org.py', 'bib', *args]
         process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         output = process.communicate()
         if process.wait() != 0:

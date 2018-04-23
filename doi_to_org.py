@@ -7,6 +7,7 @@ import os
 import yaml
 import hashlib
 import shutil
+import argparse
 from abc import ABC, abstractmethod
 import tempfile
 import mimetypes
@@ -452,18 +453,25 @@ class BibOrgEntry(AbstractOrgEntry):
             f.write('\n')
 
 CONFIG_TYPES = [BibOrgEntry]
+TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        sys.exit('Syntax: %s <doi>\n')
+    parser = argparse.ArgumentParser(
+            description='Automatic templates for org-mode')
+    parser.add_argument('type', type=str, choices=[config.type_key for config in CONFIG_TYPES],
+            help='Type of the file to add.')
+    parser.add_argument('entries', type=str, nargs='+',
+            help='Descriptors for the entries to add.')
+    args = parser.parse_args()
     try:
         config = get_config()
     except FileNotFoundError:
         sys.exit('No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
     except ConfigError as e:
         sys.exit('Error with the configuration file: %s' % e)
-    for arg in sys.argv[1:]:
+    cls = TYPE_TO_CLS[args.type]
+    for arg in args.entries:
         try:
-            for entry in BibOrgEntry.fabric(config, arg):
+            for entry in cls.fabric(config, arg):
                 entry.add_entry()
         except FileNotFoundError as e:
             sys.exit(e)
