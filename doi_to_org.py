@@ -362,7 +362,7 @@ class AbstractOrgEntry(ABC):
         sections   = self.sections_str()
         return '\n'.join([header, properties, sections])
 
-class OrgEntry(AbstractOrgEntry):
+class BibOrgEntry(AbstractOrgEntry):
     def __init__(self, orgfile, bibentry, attachment=None):
         super().__init__(orgfile, attachment)
         self.bibentry = bibentry
@@ -445,7 +445,7 @@ if __name__ == '__main__':
         pdfpath = config[CONFIG_PDFPATH_KEY]
     for arg in sys.argv[1:]:
         try:
-            for entry in OrgEntry.fabric(orgfile, arg, pdfpath=pdfpath):
+            for entry in BibOrgEntry.fabric(orgfile, arg, pdfpath=pdfpath):
                 entry.add_entry()
         except FileNotFoundError as e:
             sys.exit(e)

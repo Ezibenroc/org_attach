@@ -64,12 +64,12 @@ class BibEntryTest(unittest.TestCase):
             bibtex = f.read()
 
         bib_list = BibEntry.from_bibtex(bibtex)
-        org_entry = OrgEntry("", bib_list[0], attachment = True)
+        org_entry = BibOrgEntry("", bib_list[0], attachment = True)
 
         with self.assertRaises(SystemExit):
            org_entry.orgmode_from_bibentry()
 
-class OrgEntryTest(unittest.TestCase):
+class BibOrgEntryTest(unittest.TestCase):
     class MockEntry(AbstractOrgEntry):
         @classmethod
         def fabric(self, orgfile, arg):
@@ -237,7 +237,7 @@ class AttachmentTest(Util):
         orgfile = os.path.join(os.getcwd(), 'bar.org')
 
         bib_list = BibEntry.from_bibtex(bibtex)
-        org_entry = OrgEntry(orgfile, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
+        org_entry = BibOrgEntry(orgfile, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
 
         org_entry.add_entry()
         self.assertTrue(os.path.isfile("./data/2a" +
@@ -262,7 +262,7 @@ class AttachmentTest(Util):
         with self.assertRaises(FileNotFoundError):
             attachment = Attachment.from_key(pdfpath, bib_list[0].key)
 
-            org_entry = OrgEntry(orgfile, bib_list[0], attachment)
+            org_entry = BibOrgEntry(orgfile, bib_list[0], attachment)
             org_entry.add_entry()
 
 if __name__ == "__main__":
