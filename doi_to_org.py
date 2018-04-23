@@ -18,7 +18,7 @@ CONFIG_FILE = '.doirc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
 CONFIG_ORGFILE_KEY = 'orgfile'
 CONFIG_PDFPATH_KEY = 'pdfpath'
-CONFIG_TAG_KEY = 'tag'
+CONFIG_TAG_KEY = 'tags'
 CONFIG_TODO_KEY = 'todo'
 CONFIG_PROPERTIES_KEY = 'properties'
 CONFIG_SECTIONS_KEY = 'sections'
@@ -300,10 +300,7 @@ class AbstractOrgEntry(ABC):
         self.attached_file_hash = None
         self.orgfile = config[CONFIG_ORGFILE_KEY]
         self.star_level = config[CONFIG_LEVEL_KEY]
-        try:
-            self.config = config[self.type_key]
-        except KeyError:
-            self.config = self.default_config
+        self.config = config.get(self.type_key, self.default_config)
 
     @classmethod
     @abstractmethod
@@ -321,14 +318,15 @@ class AbstractOrgEntry(ABC):
         self.attachment.move_to(os.path.join(last_level_dir, file_name))
 
     @property
-    @abstractmethod
     def tags(self):
-        pass
+        tags = self.config.get(CONFIG_TAG_KEY, '')
+        if isinstance(tags, str): # 0 or 1 tag
+            tags = [tags]
+        return tags
 
     @property
-    @abstractmethod
     def todo(self):
-        pass
+        return self.config.get(CONFIG_TODO_KEY, '')
 
     @property
     @abstractmethod
@@ -365,7 +363,12 @@ class AbstractOrgEntry(ABC):
 
     @property
     def sections(self):
-        return [('Summary', None), ('Notes', None), ('Open Questions [/]', None)]
+        sect_config = self.config.get(CONFIG_SECTIONS_KEY, [])
+        sections = []
+        for sect in sect_config:
+            sections.append((sect, None))
+        return sections
+     #   return [('Summary', None), ('Notes', None), ('Open Questions [/]', None)]
 
     def sections_str(self):
         sections = []
@@ -412,26 +415,22 @@ class BibOrgEntry(AbstractOrgEntry):
             raise SyntaxError('Wrong argument format, got %s.' % arg)
 
     @property
-    def tags(self):
-        return ['PAPER']
-
-    @property
-    def todo(self):
-        return 'UNREAD'
-
-    @property
     def title(self):
         return self.bibentry.title
 
     @property
     def properties(self):
         try:
-            return [('DOI', self.bibentry.doi),
-                    ('URL', self.bibentry.url),
-                    ('AUTHORS', self.bibentry.authors),
-                   ]
+            prop = {'DOI' : self.bibentry.doi,
+                    'URL' : self.bibentry.url,
+                    'AUTHORS' : self.bibentry.authors
+                    }
         except MissingAuthorError as e:
             sys.exit(e)
+        properties = []
+        for p in self.config.get(CONFIG_PROPERTIES_KEY, []):
+            properties.append((p, prop[p]))
+        return properties
 
     @property
     def sections(self):

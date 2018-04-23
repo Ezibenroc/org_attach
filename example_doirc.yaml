@@ -1,0 +1,13 @@
+orgfile: foo.org
+level: 4
+bib:
+    tags: PAPER
+    todo: UNREAD
+    properties:
+        - DOI
+        - URL
+        - AUTHORS
+    sections:
+        - Summary
+        - Notes
+        - Open Questions [/]

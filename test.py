@@ -9,7 +9,11 @@ import yaml
 import filecmp
 import shutil
 from subprocess import Popen, PIPE
+from shutil import copyfile
 from doi_to_org import *
+
+ORG_FILE = 'foo.org'
+EXAMPLE_CONFIG = 'example_doirc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
@@ -19,19 +23,17 @@ class Util(unittest.TestCase):
         if process.wait() != 0:
             sys.stderr.write('with command: %s\nstdout: %s\nstderr: %s\n' % (' '.join(args), output[0].decode('utf8'), output[1].decode('utf8')))
             self.assertTrue(False)
-        with open(self.orgfile) as f:
+        with open(ORG_FILE) as f:
             return f.read()
 
     def create_config(self):
-        self.orgfile = os.path.join(os.getcwd(), 'foo.org')
-        with open(self.orgfile, 'w') as f:
+        with open(ORG_FILE, 'w') as f:
             f.write('')
-        with open(CONFIG_FILE, 'w') as f:
-            yaml.dump({CONFIG_ORGFILE_KEY : self.orgfile, CONFIG_LEVEL_KEY : 4}, f)
+        copyfile(EXAMPLE_CONFIG, CONFIG_FILE)
 
     def tearDown(self):
         os.remove(CONFIG_FILE)
-        os.remove(self.orgfile)
+        os.remove(ORG_FILE)
 
     def setUp(self):
         self.maxDiff = None
@@ -68,8 +70,9 @@ class BibEntryTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
            org_entry.orgmode_from_bibentry()
 
-class BibOrgEntryTest(unittest.TestCase):
+class AbstractBibEntryTest(unittest.TestCase):
     class MockEntry(AbstractOrgEntry):
+        type_key = 'mock'
         @classmethod
         def fabric(self, orgfile, arg):
             pass
@@ -95,14 +98,19 @@ class BibOrgEntryTest(unittest.TestCase):
             return super().sections + [('mysection', 'bar')]
 
     def setUp(self):
-        self.config = {CONFIG_ORGFILE_KEY: 'orgfile', CONFIG_LEVEL_KEY: 4}
+        self.config = {CONFIG_ORGFILE_KEY: 'orgfile', CONFIG_LEVEL_KEY: 4,
+                'mock': {
+                        CONFIG_TAG_KEY      : ['tag1', 'tag2'],
+                        CONFIG_TODO_KEY     : 'todo',
+                        CONFIG_SECTIONS_KEY : ['section1', 'section2']
+                    }}
         self.entry = self.MockEntry(self.config)
 
     def test_noattach(self):
         entry = self.entry
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:')
         self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:END:')
-        self.assertEqual(entry.sections_str(), '***** Summary\n***** Notes\n***** Open Questions [/]\n***** mysection\nbar')
+        self.assertEqual(entry.sections_str(), '***** section1\n***** section2\n***** mysection\nbar')
         self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
             entry.sections_str()]))
 
@@ -112,7 +120,7 @@ class BibOrgEntryTest(unittest.TestCase):
         entry.attached_file_hash = 'hash'
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:ATTACH:')
         self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:Attachments: file.pdf\n:ID: hash\n:END:')
-        self.assertEqual(entry.sections_str(), '***** Summary\n***** Notes\n***** Open Questions [/]\n***** mysection\nbar')
+        self.assertEqual(entry.sections_str(), '***** section1\n***** section2\n***** mysection\nbar')
         self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
             entry.sections_str()]))
 
@@ -140,20 +148,19 @@ class BasicCommandLineTest(Util):
         bibtex = '\n'.join(bibtex)
         with open('/tmp/test_doi.bib', 'w') as f:
             f.write(bibtex)
-        with open(self.orgfile, 'w') as f: # clearing the file...
+        with open(ORG_FILE, 'w') as f: # clearing the file...
             f.write('')
         second_output = self.run_prog('/tmp/test_doi.bib')
         self.assertEqual(first_output, second_output)
 
 class ConfigTest(unittest.TestCase):
     def setUp(self):
-        self.orgfile = os.path.join(os.getcwd(), 'foo.org')
-        with open(self.orgfile, 'w') as f:
+        with open(ORG_FILE, 'w') as f:
             f.write('hello world!')
 
     def tearDown(self):
         os.remove(CONFIG_FILE)
-        os.remove(self.orgfile)
+        os.remove(ORG_FILE)
 
     def test_find_file(self):
         with self.assertRaises(FileNotFoundError):
@@ -168,19 +175,19 @@ class ConfigTest(unittest.TestCase):
             yaml.dump(config, f)
 
     def test_get_correct_config(self):
-        config = {CONFIG_ORGFILE_KEY: self.orgfile}
+        config = {CONFIG_ORGFILE_KEY: ORG_FILE}
         self.create_config_file(config)
         real_config = get_config()
         self.assertEqual(config, real_config)
 
     def test_get_config_wrongfile(self):
-        config = {CONFIG_ORGFILE_KEY: self.orgfile + 'some_other_str'}
+        config = {CONFIG_ORGFILE_KEY: ORG_FILE + 'some_other_str'}
         self.create_config_file(config)
         with self.assertRaises(ConfigError):
             get_config()
 
     def test_get_config_wrongkey(self):
-        config = {'foo' : self.orgfile}
+        config = {'foo' : ORG_FILE}
         self.create_config_file(config)
         with self.assertRaises(ConfigError):
             get_config()
@@ -188,8 +195,8 @@ class ConfigTest(unittest.TestCase):
 class AttachmentTest(Util):
     def tearDown(self):
         shutil.rmtree('data')
-        if os.path.isfile(self.orgfile):
-            os.remove(self.orgfile)
+        if os.path.isfile(ORG_FILE):
+            os.remove(ORG_FILE)
 
     def assert_output_equal(self, expected, real):
         seen_id = False
