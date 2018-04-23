@@ -27,7 +27,7 @@ class Util(unittest.TestCase):
         with open(self.orgfile, 'w') as f:
             f.write('')
         with open(CONFIG_FILE, 'w') as f:
-            yaml.dump({CONFIG_ORGFILE_KEY : self.orgfile}, f)
+            yaml.dump({CONFIG_ORGFILE_KEY : self.orgfile, CONFIG_LEVEL_KEY : 4}, f)
 
     def tearDown(self):
         os.remove(CONFIG_FILE)
@@ -62,10 +62,9 @@ class BibEntryTest(unittest.TestCase):
     def test_missing_author(self):
         with open('test_data/casanova_missing_author_input.bib') as f:
             bibtex = f.read()
-
         bib_list = BibEntry.from_bibtex(bibtex)
-        org_entry = BibOrgEntry("", bib_list[0], attachment = True)
-
+        config = {CONFIG_ORGFILE_KEY: '', CONFIG_LEVEL_KEY: 4}
+        org_entry = BibOrgEntry(config, bib_list[0], attachment = True)
         with self.assertRaises(SystemExit):
            org_entry.orgmode_from_bibentry()
 
@@ -95,8 +94,12 @@ class BibOrgEntryTest(unittest.TestCase):
         def sections(self):
             return super().sections + [('mysection', 'bar')]
 
+    def setUp(self):
+        self.config = {CONFIG_ORGFILE_KEY: 'orgfile', CONFIG_LEVEL_KEY: 4}
+        self.entry = self.MockEntry(self.config)
+
     def test_noattach(self):
-        entry = self.MockEntry('orgfile')
+        entry = self.entry
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:')
         self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:END:')
         self.assertEqual(entry.sections_str(), '***** Summary\n***** Notes\n***** Open Questions [/]\n***** mysection\nbar')
@@ -104,7 +107,7 @@ class BibOrgEntryTest(unittest.TestCase):
             entry.sections_str()]))
 
     def test_attach(self):
-        entry = self.MockEntry('orgfile')
+        entry = self.entry
         entry.attached_file_name = 'file.pdf'
         entry.attached_file_hash = 'hash'
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:ATTACH:')
@@ -237,7 +240,8 @@ class AttachmentTest(Util):
         orgfile = os.path.join(os.getcwd(), 'bar.org')
 
         bib_list = BibEntry.from_bibtex(bibtex)
-        org_entry = BibOrgEntry(orgfile, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
+        config = {CONFIG_ORGFILE_KEY: orgfile, CONFIG_LEVEL_KEY: 4}
+        org_entry = BibOrgEntry(config, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
 
         org_entry.add_entry()
         self.assertTrue(os.path.isfile("./data/2a" +

@@ -18,6 +18,11 @@ CONFIG_FILE = '.doirc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
 CONFIG_ORGFILE_KEY = 'orgfile'
 CONFIG_PDFPATH_KEY = 'pdfpath'
+CONFIG_TAG_KEY = 'tag'
+CONFIG_TODO_KEY = 'todo'
+CONFIG_PROPERTIES_KEY = 'properties'
+CONFIG_SECTIONS_KEY = 'sections'
+CONFIG_LEVEL_KEY = 'level'
 
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
@@ -47,6 +52,15 @@ def get_config():
     if not os.path.isfile(orgfile):
         raise ConfigError('%s %s does not exist.' % (CONFIG_ORGFILE_KEY, orgfile))
     return config
+
+def safeget(dct, *keys):
+    '''Taken from https://stackoverflow.com/a/25833661/4110059'''
+    for key in keys:
+        try:
+            dct = dct[key]
+        except KeyError:
+            return None
+    return dct
 
 class BibEntry:
     def __init__(self, pybtex_bib):
@@ -277,17 +291,23 @@ class Attachment:
             pass
 
 class AbstractOrgEntry(ABC):
-    star_level = 4
+    type_key = None
+    default_config = {}
 
-    def __init__(self, orgfile, attachment=None):
-        self.orgfile = orgfile
+    def __init__(self, config, attachment=None):
         self.attachment = attachment
         self.attached_file_name = None
         self.attached_file_hash = None
+        self.orgfile = config[CONFIG_ORGFILE_KEY]
+        self.star_level = config[CONFIG_LEVEL_KEY]
+        try:
+            self.config = config[self.type_key]
+        except KeyError:
+            self.config = self.default_config
 
     @classmethod
     @abstractmethod
-    def fabric(cls, orgfile, arg):
+    def fabric(cls, config, arg):
         pass
 
     def attach_file(self, file_name, file_hash):
@@ -363,8 +383,9 @@ class AbstractOrgEntry(ABC):
         return '\n'.join([header, properties, sections])
 
 class BibOrgEntry(AbstractOrgEntry):
-    def __init__(self, orgfile, bibentry, attachment=None):
-        super().__init__(orgfile, attachment)
+    type_key = 'bib'
+    def __init__(self, config, bibentry, attachment=None):
+        super().__init__(config, attachment)
         self.bibentry = bibentry
         if not self.attachment: # no attachment specified, trying to grab it
             try:
@@ -373,19 +394,20 @@ class BibOrgEntry(AbstractOrgEntry):
                 pass
 
     @classmethod
-    def fabric(cls, orgfile, arg, pdfpath=None):
+    def fabric(cls, config, arg):
+        pdfpath = safeget(config, cls.type_key, CONFIG_PDFPATH_KEY)
         arg_list = arg.split(',')
         bib_entries = BibEntry.from_arg(arg_list[0])
         if len(arg_list) == 1:
             if pdfpath:
-                return [cls(orgfile, bib_entry, Attachment.from_key(pdfpath, bib_entry.key)) for bib_entry in bib_entries]
+                return [cls(config, bib_entry, Attachment.from_key(pdfpath, bib_entry.key)) for bib_entry in bib_entries]
             else:
-                return [cls(orgfile, bib_entry) for bib_entry in bib_entries]
+                return [cls(config, bib_entry) for bib_entry in bib_entries]
         elif len(arg_list) == 2:
             if len(bib_entries) > 1:
                 raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (arg_list[0], arg_list[1]))
             bib_entry = bib_entries[0]
-            return [cls(orgfile, bib_entry, Attachment.from_arg(arg_list[1]))]
+            return [cls(config, bib_entry, Attachment.from_arg(arg_list[1]))]
         else:
             raise SyntaxError('Wrong argument format, got %s.' % arg)
 
@@ -430,6 +452,7 @@ class BibOrgEntry(AbstractOrgEntry):
             f.write(org_txt)
             f.write('\n')
 
+CONFIG_TYPES = [BibOrgEntry]
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit('Syntax: %s <doi>\n')
@@ -439,13 +462,9 @@ if __name__ == '__main__':
         sys.exit('No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
     except ConfigError as e:
         sys.exit('Error with the configuration file: %s' % e)
-    orgfile = config[CONFIG_ORGFILE_KEY]
-    pdfpath = None
-    if CONFIG_PDFPATH_KEY in config:
-        pdfpath = config[CONFIG_PDFPATH_KEY]
     for arg in sys.argv[1:]:
         try:
-            for entry in BibOrgEntry.fabric(orgfile, arg, pdfpath=pdfpath):
+            for entry in BibOrgEntry.fabric(config, arg):
                 entry.add_entry()
         except FileNotFoundError as e:
             sys.exit(e)
