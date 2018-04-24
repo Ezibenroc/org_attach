@@ -202,8 +202,9 @@ class MissingAuthorError(KeyError):
         super(MissingAuthorError, self).__init__(message, *args)
 
 class Attachment:
-    def __init__(self, temporary_file):
+    def __init__(self, temporary_file, arg):
         self.file = temporary_file
+        self.arg = arg
 
     @classmethod
     def tempfile_from_url(cls, url):
@@ -235,7 +236,7 @@ class Attachment:
                 if os.path.splitext(f)[0] == key:
                     temp_f = tempfile.NamedTemporaryFile()
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
-                    attachment = cls(temp_f)
+                    attachment = cls(temp_f, key)
                     return attachment
 
         raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
@@ -251,7 +252,7 @@ class Attachment:
                 temp_f = func(arg)
             except FileError:
                 continue
-            attachment = cls(temp_f)
+            attachment = cls(temp_f, arg)
             return attachment
         raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
 
