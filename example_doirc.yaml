@@ -13,7 +13,6 @@ bib:
         - Open Questions [/]
 ipynb:
     tags: NOTEBOOK
-    todo: TODO
     properties:
         - LANGUAGE
         - VERSION

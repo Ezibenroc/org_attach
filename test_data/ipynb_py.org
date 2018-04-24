@@ -1,4 +1,4 @@
-**** TODO Test python	:NOTEBOOK:PYTHON:ATTACH:
+**** Test python	:NOTEBOOK:PYTHON:ATTACH:
 :PROPERTIES:
 :LANGUAGE: python
 :VERSION: 3.6.4

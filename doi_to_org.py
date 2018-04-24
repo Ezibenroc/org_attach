@@ -343,14 +343,14 @@ class AbstractOrgEntry(ABC):
 
     @property
     def tags(self):
-        tags = self.config.get(CONFIG_TAG_KEY, '')
+        tags = self.config.get(CONFIG_TAG_KEY, [])
         if isinstance(tags, str): # 0 or 1 tag
             tags = [tags]
         return tags
 
     @property
     def todo(self):
-        return self.config.get(CONFIG_TODO_KEY, '')
+        return self.config.get(CONFIG_TODO_KEY, None)
 
     @property
     @abstractmethod
@@ -362,7 +362,8 @@ class AbstractOrgEntry(ABC):
         if self.attachment:
             tags.append('ATTACH')
         tags = ':%s:' % ':'.join(tags)
-        header = ['*'*self.star_level, self.todo, self.title]
+        todo = [self.todo] if self.todo else []
+        header = ['*'*self.star_level, *todo, self.title]
         h= ' '.join(header) + '\t' + tags
         return h
 
