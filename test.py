@@ -8,6 +8,7 @@ import sys
 import yaml
 import filecmp
 import shutil
+from collections import namedtuple
 from subprocess import Popen, PIPE
 from shutil import copyfile
 from doi_to_org import *
@@ -68,7 +69,7 @@ class BibEntryTest(unittest.TestCase):
         config = {CONFIG_ORGFILE_KEY: '', CONFIG_LEVEL_KEY: 4}
         org_entry = BibOrgEntry(config, bib_list[0], attachment = True)
         with self.assertRaises(SystemExit):
-           org_entry.orgmode_from_bibentry()
+           org_entry.to_orgmode()
 
 class AbstractBibEntryTest(unittest.TestCase):
     class MockEntry(AbstractOrgEntry):
@@ -97,6 +98,10 @@ class AbstractBibEntryTest(unittest.TestCase):
         def sections(self):
             return super().sections + [('mysection', 'bar')]
 
+        @property
+        def attachment_file_name(self):
+            return 'file.pdf'
+
     def setUp(self):
         self.config = {CONFIG_ORGFILE_KEY: 'orgfile', CONFIG_LEVEL_KEY: 4,
                 'mock': {
@@ -111,17 +116,16 @@ class AbstractBibEntryTest(unittest.TestCase):
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:')
         self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:END:')
         self.assertEqual(entry.sections_str(), '***** section1\n***** section2\n***** mysection\nbar')
-        self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
+        self.assertEqual(entry.to_orgmode(), '\n'.join([entry.header_str(), entry.properties_str(),
             entry.sections_str()]))
 
     def test_attach(self):
         entry = self.entry
-        entry.attached_file_name = 'file.pdf'
-        entry.attached_file_hash = 'hash'
+        entry.attachment = namedtuple('attachment', ['hash'])('hash')
         self.assertEqual(entry.header_str(), '**** todo title\t:tag1:tag2:ATTACH:')
         self.assertEqual(entry.properties_str(), ':PROPERTIES:\n:property1: 12\n:property2: foo\n:Attachments: file.pdf\n:ID: hash\n:END:')
         self.assertEqual(entry.sections_str(), '***** section1\n***** section2\n***** mysection\nbar')
-        self.assertEqual(entry.orgmode_from_bibentry(), '\n'.join([entry.header_str(), entry.properties_str(),
+        self.assertEqual(entry.to_orgmode(), '\n'.join([entry.header_str(), entry.properties_str(),
             entry.sections_str()]))
 
 class BasicCommandLineTest(Util):

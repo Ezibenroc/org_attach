@@ -297,8 +297,6 @@ class AbstractOrgEntry(ABC):
 
     def __init__(self, config, attachment=None):
         self.attachment = attachment
-        self.attached_file_name = None
-        self.attached_file_hash = None
         self.orgfile = config[CONFIG_ORGFILE_KEY]
         self.star_level = config[CONFIG_LEVEL_KEY]
         self.config = config.get(self.type_key, self.default_config)
@@ -336,7 +334,7 @@ class AbstractOrgEntry(ABC):
 
     def header_str(self):
         tags = self.tags
-        if self.attached_file_name:
+        if self.attachment:
             tags.append('ATTACH')
         tags = ':%s:' % ':'.join(tags)
         header = ['*'*self.star_level, self.todo, self.title]
@@ -351,9 +349,9 @@ class AbstractOrgEntry(ABC):
     def properties_str(self):
         properties = []
         all_prop = self.properties
-        if self.attached_file_name:
-            all_prop.append(('Attachments', self.attached_file_name))
-            all_prop.append(('ID',         self.attached_file_hash))
+        if self.attachment:
+            all_prop.append(('Attachments', self.attachment_file_name))
+            all_prop.append(('ID',         self.attachment.hash))
         all_prop = [('PROPERTIES', None)] + all_prop + [('END', None)]
         for prop_name, prop_val in all_prop:
             prop = ':%s:' % prop_name
@@ -369,7 +367,6 @@ class AbstractOrgEntry(ABC):
         for sect in sect_config:
             sections.append((sect, None))
         return sections
-     #   return [('Summary', None), ('Notes', None), ('Open Questions [/]', None)]
 
     def sections_str(self):
         sections = []
@@ -380,11 +377,24 @@ class AbstractOrgEntry(ABC):
             sections.append(sect)
         return '\n'.join(sections)
 
-    def orgmode_from_bibentry(self):
+    def to_orgmode(self):
         header     = self.header_str()
         properties = self.properties_str()
         sections   = self.sections_str()
         return '\n'.join([header, properties, sections])
+
+    @property
+    @abstractmethod
+    def attachment_file_name(self):
+        pass
+
+    def add_entry(self):
+        org_txt = self.to_orgmode()
+        if self.attachment:
+            self.attach_file(self.attachment_file_name, self.attachment.hash)
+        with open(self.orgfile, 'a') as f:
+            f.write(org_txt)
+            f.write('\n')
 
 class BibOrgEntry(AbstractOrgEntry):
     type_key = 'bib'
@@ -438,19 +448,9 @@ class BibOrgEntry(AbstractOrgEntry):
         bib = '#+BEGIN_SRC bib :tangle bibliography.bib\n%s#+END_SRC' % self.bibentry.bibtex
         return super().sections + [('BibTeX', bib)]
 
-    def generate_attachment_file_name(self):
+    @property
+    def attachment_file_name(self):
         return self.bibentry.title.replace(' ', '_') + self.attachment.extension
-
-    def add_entry(self):
-        if self.attachment:
-            self.attached_file_name = self.generate_attachment_file_name()
-            self.attached_file_hash = self.attachment.hash
-        org_txt = self.orgmode_from_bibentry()
-        if self.attachment:
-            self.attach_file(self.attached_file_name, self.attached_file_hash)
-        with open(self.orgfile, 'a') as f:
-            f.write(org_txt)
-            f.write('\n')
 
 CONFIG_TYPES = [BibOrgEntry]
 TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
