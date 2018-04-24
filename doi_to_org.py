@@ -8,6 +8,7 @@ import yaml
 import hashlib
 import shutil
 import argparse
+from enum import Enum
 from abc import ABC, abstractmethod
 import tempfile
 import mimetypes
@@ -202,9 +203,11 @@ class MissingAuthorError(KeyError):
         super(MissingAuthorError, self).__init__(message, *args)
 
 class Attachment:
-    def __init__(self, temporary_file, arg):
+    origin_enum = Enum('Origin', ['key', 'url', 'path'])
+    def __init__(self, temporary_file, arg, origin):
         self.file = temporary_file
         self.arg = arg
+        self.origin = origin
 
     @classmethod
     def tempfile_from_url(cls, url):
@@ -236,7 +239,7 @@ class Attachment:
                 if os.path.splitext(f)[0] == key:
                     temp_f = tempfile.NamedTemporaryFile()
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
-                    attachment = cls(temp_f, key)
+                    attachment = cls(temp_f, key, cls.origin_enum.key)
                     return attachment
 
         raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
@@ -244,15 +247,15 @@ class Attachment:
     @classmethod
     def from_arg(cls, arg):
         functions = [
-                cls.tempfile_from_path,
-                cls.tempfile_from_url,
+                (cls.tempfile_from_path, cls.origin_enum.path),
+                (cls.tempfile_from_url,  cls.origin_enum.url),
         ]
-        for func in functions:
+        for func, origin in functions:
             try:
                 temp_f = func(arg)
             except FileError:
                 continue
-            attachment = cls(temp_f, arg)
+            attachment = cls(temp_f, arg, origin)
             return attachment
         raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
 
