@@ -226,7 +226,7 @@ class Attachment:
         return f
 
     @classmethod
-    def tempfile_from_key(cls, path, key):
+    def from_key(cls, path, key):
         if not os.path.isdir(path):
             raise FileError('Not a valid path.')
 
@@ -235,30 +235,25 @@ class Attachment:
                 if os.path.splitext(f)[0] == key:
                     temp_f = tempfile.NamedTemporaryFile()
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
-                    return temp_f
+                    attachment = cls(temp_f)
+                    return attachment
 
         raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
 
     @classmethod
-    def tempfile_from_arg(cls, arg):
+    def from_arg(cls, arg):
         functions = [
                 cls.tempfile_from_path,
                 cls.tempfile_from_url,
         ]
         for func in functions:
             try:
-                return func(arg)
+                temp_f = func(arg)
             except FileError:
                 continue
+            attachment = cls(temp_f)
+            return attachment
         raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
-
-    @classmethod
-    def from_arg(cls, arg):
-        return cls(cls.tempfile_from_arg(arg))
-
-    @classmethod
-    def from_key(cls, path, key):
-        return cls(cls.tempfile_from_key(path, key))
 
     @property
     def path(self):
