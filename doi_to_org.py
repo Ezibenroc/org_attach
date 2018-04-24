@@ -10,6 +10,9 @@ import shutil
 import argparse
 from enum import Enum
 from abc import ABC, abstractmethod
+from urllib.parse import urlparse
+from posixpath import basename, dirname
+
 import tempfile
 import mimetypes
 import magic            # https://pypi.python.org/pypi/python-magic/
@@ -263,6 +266,25 @@ class Attachment:
     def path(self):
         return self.file.name
 
+    @property
+    def original_fullname(self):
+        if self.origin == self.origin_enum.key:
+            return self.arg
+        elif self.origin == self.origin_enum.url:
+            return basename(urlparse(self.arg).path)
+        elif self.origin == self.origin_enum.path:
+            return os.path.basename(self.arg)
+        else:
+            assert False
+
+    @property
+    def original_name(self):
+        return os.path.splitext(self.original_fullname)[0]
+
+    @property
+    def original_extension(self):
+        return os.path.splitext(self.original_fullname)[1]
+
     @classmethod
     def crypto_hash(cls, filename):
     # https://stackoverflow.com/a/3431838/4110059
@@ -278,6 +300,9 @@ class Attachment:
 
     @property
     def extension(self):
+        ext = self.original_extension
+        if ext:
+            return ext
         mime = magic.from_file(self.path, mime=True)
         if mime == 'text/plain':
             return '.txt' # mimetypes return some weird things for plain text

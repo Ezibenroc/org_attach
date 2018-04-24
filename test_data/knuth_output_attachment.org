@@ -3,7 +3,7 @@
 :DOI: 10.1137/0206024
 :URL: https://doi.org/10.1137%2F0206024
 :AUTHORS: Donald E. Knuth, Jr. James H. Morris, Vaughan R. Pratt
-:Attachments: Fast_Pattern_Matching_in_Strings.txt
+:Attachments: Fast_Pattern_Matching_in_Strings.bib
 :ID: 37f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49
 :END:
 ***** Summary
