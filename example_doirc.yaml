@@ -11,3 +11,13 @@ bib:
         - Summary
         - Notes
         - Open Questions [/]
+ipynb:
+    tags: NOTEBOOK
+    todo: TODO
+    properties:
+        - LANGUAGE
+        - VERSION
+    sections:
+        - Summary
+        - Notes
+        - Open Questions [/]

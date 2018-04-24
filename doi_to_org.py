@@ -5,6 +5,7 @@ import requests
 import re
 import os
 import yaml
+import json
 import hashlib
 import shutil
 import argparse
@@ -476,7 +477,44 @@ class BibOrgEntry(AbstractOrgEntry):
     def attachment_file_name(self):
         return self.bibentry.title.replace(' ', '_') + self.attachment.extension
 
-CONFIG_TYPES = [BibOrgEntry]
+class IpynbOrgEntry(AbstractOrgEntry):
+    type_key = 'ipynb'
+    def __init__(self, config, attachment):
+        super().__init__(config, attachment)
+        with open(self.attachment.path) as f:
+            self.metadata = json.load(f)['metadata']
+
+    @property
+    def tags(self):
+        return super().tags + [self.metadata['language_info']['name'].upper()]
+
+    @classmethod
+    def fabric(cls, config, arg):
+        return [cls(config, Attachment.from_arg(arg))]
+
+    @property
+    def title(self):
+        name = self.attachment.original_name
+        name = name.replace('_', ' ')
+        name = '%s%s' % (name[0].upper(), name[1:])
+        return name
+
+    @property
+    def properties(self):
+        prop = {'LANGUAGE' : self.metadata['language_info']['name'],
+                'VERSION'  : self.metadata['language_info']['version'],
+                }
+        properties = []
+        for p in self.config.get(CONFIG_PROPERTIES_KEY, []):
+            properties.append((p, prop[p]))
+        return properties
+
+    @property
+    def attachment_file_name(self):
+        return self.attachment.original_fullname
+
+
+CONFIG_TYPES = [BibOrgEntry, IpynbOrgEntry]
 TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

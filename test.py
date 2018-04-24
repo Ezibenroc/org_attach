@@ -18,7 +18,7 @@ EXAMPLE_CONFIG = 'example_doirc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
-        cmd = ['./doi_to_org.py', 'bib', *args]
+        cmd = ['./doi_to_org.py', *args]
         process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         output = process.communicate()
         if process.wait() != 0:
@@ -43,7 +43,7 @@ class Util(unittest.TestCase):
     def generic_test(self, arg, expected_output_file):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
-        output = self.run_prog(arg).strip()
+        output = self.run_prog('bib', arg).strip()
         self.assertEqual(output, expected_output)
 
 class BibEntryTest(unittest.TestCase):
@@ -136,7 +136,7 @@ class BasicCommandLineTest(Util):
         self.generic_test('test_data/knuth_input.bib', 'test_data/knuth_output.org')
 
     def test_fixpoint(self):
-        first_output = self.run_prog('test_data/knuth_input.bib')
+        first_output = self.run_prog('bib', 'test_data/knuth_input.bib')
         splitted = first_output.split('\n')
         bibtex = []
         in_src = False
@@ -154,7 +154,7 @@ class BasicCommandLineTest(Util):
             f.write(bibtex)
         with open(ORG_FILE, 'w') as f: # clearing the file...
             f.write('')
-        second_output = self.run_prog('/tmp/test_doi.bib')
+        second_output = self.run_prog('bib', '/tmp/test_doi.bib')
         self.assertEqual(first_output, second_output)
 
 class ConfigTest(unittest.TestCase):
@@ -216,29 +216,29 @@ class AttachmentTest(Util):
                 return real_id
 
 
-    def generic_test(self, args, file_hash, file_name, expected_output_file):
+    def generic_test(self, mode, args, file_hash, file_name, expected_output_file):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
-        output = self.run_prog('%s' % (','.join(args))).strip()
+        output = self.run_prog(mode, '%s' % (','.join(args))).strip()
         real_id = self.assert_output_equal(expected=expected_output, real=output)
         file_path = os.path.join('data', real_id[:2], real_id[2:], file_name)
         self.assertTrue(os.path.isfile(file_path))
         self.assertEqual(Attachment.crypto_hash(file_path), real_id)
 
     def test_basic_attachment(self): # attaching knuth_input.bib
-        self.generic_test(args=['test_data/knuth_input.bib', 'test_data/knuth_input.bib'],
+        self.generic_test(mode='bib', args=['test_data/knuth_input.bib', 'test_data/knuth_input.bib'],
                 file_hash = '37f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49',
                 file_name = 'Fast_Pattern_Matching_in_Strings.bib',
                 expected_output_file='test_data/knuth_output_attachment.org')
 
     def test_url(self):
-        self.generic_test(args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
+        self.generic_test(mode='bib', args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
                 file_hash = '095c324c84cc92722b52a2e87b63c638d052ea30397646bc4462ee84bca46412c574f89d636d1841d54eae2df7d33a545e97e204ed0147a84c1d89b7deb8081e',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
 
     def test_hal(self):
-        self.generic_test(args=['hal-01017319v2'],
+        self.generic_test(mode='bib', args=['hal-01017319v2'],
                 file_hash = '095c324c84cc92722b52a2e87b63c638d052ea30397646bc4462ee84bca46412c574f89d636d1841d54eae2df7d33a545e97e204ed0147a84c1d89b7deb8081e',
                 file_name = 'Versatile,_Scalable,_and_Accurate_Simulation_of_Distributed_Applications_and_Platforms.pdf',
                 expected_output_file = 'test_data/casanova_output.org')
@@ -279,6 +279,18 @@ class AttachmentTest(Util):
 
             org_entry = BibOrgEntry(orgfile, bib_list[0], attachment)
             org_entry.add_entry()
+
+    def test_ipynb_py(self):
+        self.generic_test(mode='ipynb', args=['test_data/test_python.ipynb'],
+                file_hash = 'b2d63abed164ce038761b897d5af6e58c2ad72c4ab25d18529fbe30a8cef9a71bce08d4da81616368a5a14b555232c54af3dd40e0dccf1bb9a60609ef16a26f9',
+                file_name = 'test_python.ipynb',
+                expected_output_file = 'test_data/ipynb_py.org')
+
+    def test_ipynb_r(self):
+        self.generic_test(mode='ipynb', args=['test_data/test_r.ipynb'],
+                file_hash = 'df5d372b23a0d21aa629571aeb2c0ef4e9ae95c550ce0b27cb3da4c09fd39092e3e2ea3334bb0a1e6fc6baad283a5589b26516151bd4f187809a1215b04479e4<Paste>',
+                file_name = 'test_r.ipynb',
+                expected_output_file = 'test_data/ipynb_r.org')
 
 if __name__ == "__main__":
     unittest.main()
