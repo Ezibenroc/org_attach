@@ -216,11 +216,13 @@ class AttachmentTest(Util):
                 return real_id
 
 
-    def generic_test(self, mode, args, file_hash, file_name, expected_output_file):
+    def generic_test(self, mode, args, file_hash, file_name, expected_output_file, check_hash=False):
         with open(expected_output_file) as f:
             expected_output = f.read().strip()
         output = self.run_prog(mode, '%s' % (','.join(args))).strip()
         real_id = self.assert_output_equal(expected=expected_output, real=output)
+        if check_hash:
+            self.assertEqual(real_id, file_hash)
         file_path = os.path.join('data', real_id[:2], real_id[2:], file_name)
         self.assertTrue(os.path.isfile(file_path))
         self.assertEqual(Attachment.crypto_hash(file_path), real_id)
@@ -229,7 +231,8 @@ class AttachmentTest(Util):
         self.generic_test(mode='bib', args=['test_data/knuth_input.bib', 'test_data/knuth_input.bib'],
                 file_hash = '37f3616032c0bd00516ce65ff1c0c01ed25f99e5573731d660a4b38539b02346bcf794024c8d4c21e0bed97f50a309c40172ba342870e1526b370a03c55dbf49',
                 file_name = 'Fast_Pattern_Matching_in_Strings.bib',
-                expected_output_file='test_data/knuth_output_attachment.org')
+                expected_output_file='test_data/knuth_output_attachment.org',
+                check_hash=True)
 
     def test_url(self):
         self.generic_test(mode='bib', args=['https://hal.inria.fr/hal-01017319v2/bibtex'],
@@ -282,15 +285,17 @@ class AttachmentTest(Util):
 
     def test_ipynb_py(self):
         self.generic_test(mode='ipynb', args=['test_data/test_python.ipynb'],
-                file_hash = 'b2d63abed164ce038761b897d5af6e58c2ad72c4ab25d18529fbe30a8cef9a71bce08d4da81616368a5a14b555232c54af3dd40e0dccf1bb9a60609ef16a26f9',
-                file_name = 'test_python.ipynb',
-                expected_output_file = 'test_data/ipynb_py.org')
+                file_hash = '7c16d6203440fac37a6a31a2f374be6c81f9bf61b8dccc1bbcf73c754e64385fd0fe7ef127399c3f281cf4808453d5ac040e9128747a9ada2cc99faea47232ae',
+                file_name = 'test_python.html',
+                expected_output_file = 'test_data/ipynb_py.org',
+                check_hash=True)
 
     def test_ipynb_r(self):
         self.generic_test(mode='ipynb', args=['test_data/test_r.ipynb'],
-                file_hash = 'df5d372b23a0d21aa629571aeb2c0ef4e9ae95c550ce0b27cb3da4c09fd39092e3e2ea3334bb0a1e6fc6baad283a5589b26516151bd4f187809a1215b04479e4<Paste>',
-                file_name = 'test_r.ipynb',
-                expected_output_file = 'test_data/ipynb_r.org')
+                file_hash = 'abfe9fb1523ee00b53407868eef5addc90521c91ac52100ed9a91884bb866a3db3dc223a99ee80f0fbe5f4434ea9d18e8157b7a9c13a20242f39df4bddeb09a4',
+                file_name = 'test_r.html',
+                expected_output_file = 'test_data/ipynb_r.org',
+                check_hash=True)
 
 if __name__ == "__main__":
     unittest.main()

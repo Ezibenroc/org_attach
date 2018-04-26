@@ -40,7 +40,7 @@ before_install: |
   fi
 
 install:
-    - pip install pybtex python-magic requests
+    - pip install pybtex python-magic requests jupyter
 
 script:
     - python test.py

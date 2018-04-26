@@ -2,7 +2,7 @@
 :PROPERTIES:
 :LANGUAGE: R
 :VERSION: 3.4.3
-:Attachments: test_r.ipynb
+:Attachments: test_r.html
 :ID: df5d372b23a0d21aa629571aeb2c0ef4e9ae95c550ce0b27cb3da4c09fd39092e3e2ea3334bb0a1e6fc6baad283a5589b26516151bd4f187809a1215b04479e4
 :END:
 ***** Summary

@@ -9,6 +9,7 @@ import json
 import hashlib
 import shutil
 import argparse
+import subprocess
 from enum import Enum
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -29,6 +30,7 @@ CONFIG_TODO_KEY = 'todo'
 CONFIG_PROPERTIES_KEY = 'properties'
 CONFIG_SECTIONS_KEY = 'sections'
 CONFIG_LEVEL_KEY = 'level'
+CONFIG_COMPILATION_KEY = 'compile'
 
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
@@ -504,6 +506,15 @@ class IpynbOrgEntry(AbstractOrgEntry):
         super().__init__(config, attachment)
         with open(self.attachment.path) as f:
             self.metadata = json.load(f)['metadata']
+        if self.config.get(CONFIG_COMPILATION_KEY, False):
+            self.compile_attachment()
+
+    def compile_attachment(self):
+        in_file = self.attachment.path
+        out_file = TempFile(self.attachment.original_name + '.html')
+        cmd = ['jupyter', 'nbconvert', in_file, '--to', 'html', '--output', out_file.name]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.attachment = Attachment.from_arg(out_file.name)
 
     @property
     def tags(self):
