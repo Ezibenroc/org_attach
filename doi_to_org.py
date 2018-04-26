@@ -13,7 +13,7 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from posixpath import basename, dirname
-
+import pathlib
 import tempfile
 import mimetypes
 import magic            # https://pypi.python.org/pypi/python-magic/
@@ -206,6 +206,22 @@ class MissingAuthorError(KeyError):
         self.message = message
         super(MissingAuthorError, self).__init__(message, *args)
 
+class TempFile:
+    def __init__(self, filename):
+        self.filename = filename
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_file = pathlib.Path(self.temp_dir.name) / filename
+
+    def write(self, content):
+        self.temp_file.write_bytes(content)
+
+    @property
+    def name(self):
+        return str(self.temp_file)
+
+    def close(self):
+        self.temp_dir.cleanup()
+
 class Attachment:
     origin_enum = Enum('Origin', ['key', 'url', 'path'])
     def __init__(self, temporary_file, arg, origin):
@@ -215,35 +231,38 @@ class Attachment:
 
     @classmethod
     def from_url(cls, url):
+        origin = cls.origin_enum.url
         try:
             req = requests.get(url)
         except requests.exceptions.MissingSchema:
             raise FileError('Wrong URL.')
         if req.status_code != 200:
             raise FileError('Wrong URL.')
-        f = tempfile.NamedTemporaryFile()
-        f.file.write(req.content)
-        return cls(f, url, cls.origin_enum.url)
+        f = TempFile(cls.fullname_from_arg(url, origin))
+        f.write(req.content)
+        return cls(f, url, origin)
 
     @classmethod
     def from_path(cls, path):
+        origin = cls.origin_enum.path
         if not os.path.isfile(path):
             raise FileError('Not a valid path.')
-        f = tempfile.NamedTemporaryFile()
+        f = TempFile(cls.fullname_from_arg(path, origin))
         shutil.copyfile(path, f.name)
-        return cls(f, path, cls.origin_enum.path)
+        return cls(f, path, origin)
 
     @classmethod
     def from_key(cls, path, key):
+        origin = cls.origin_enum.key
         if not os.path.isdir(path):
             raise FileError('Not a valid path.')
 
         for root, dirs, files in os.walk(path):
             for f in files:
                 if os.path.splitext(f)[0] == key:
-                    temp_f = tempfile.NamedTemporaryFile()
+                    temp_f = TempFile(cls.fullname_from_arg(key, origin))
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
-                    attachment = cls(temp_f, key, cls.origin_enum.key)
+                    attachment = cls(temp_f, key, origin)
                     return attachment
         raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
 
