@@ -214,7 +214,7 @@ class Attachment:
         self.origin = origin
 
     @classmethod
-    def tempfile_from_url(cls, url):
+    def from_url(cls, url):
         try:
             req = requests.get(url)
         except requests.exceptions.MissingSchema:
@@ -223,15 +223,15 @@ class Attachment:
             raise FileError('Wrong URL.')
         f = tempfile.NamedTemporaryFile()
         f.file.write(req.content)
-        return f
+        return cls(f, url, cls.origin_enum.url)
 
     @classmethod
-    def tempfile_from_path(cls, path):
+    def from_path(cls, path):
         if not os.path.isfile(path):
             raise FileError('Not a valid path.')
         f = tempfile.NamedTemporaryFile()
         shutil.copyfile(path, f.name)
-        return f
+        return cls(f, path, cls.origin_enum.path)
 
     @classmethod
     def from_key(cls, path, key):
@@ -245,38 +245,39 @@ class Attachment:
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
                     attachment = cls(temp_f, key, cls.origin_enum.key)
                     return attachment
-
         raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
 
     @classmethod
     def from_arg(cls, arg):
         functions = [
-                (cls.tempfile_from_path, cls.origin_enum.path),
-                (cls.tempfile_from_url,  cls.origin_enum.url),
+                cls.from_path,
+                cls.from_url,
         ]
-        for func, origin in functions:
+        for func in functions:
             try:
-                temp_f = func(arg)
+                return func(arg)
             except FileError:
                 continue
-            attachment = cls(temp_f, arg, origin)
-            return attachment
         raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
 
     @property
     def path(self):
         return self.file.name
 
-    @property
-    def original_fullname(self):
-        if self.origin == self.origin_enum.key:
-            return self.arg
-        elif self.origin == self.origin_enum.url:
-            return basename(urlparse(self.arg).path)
-        elif self.origin == self.origin_enum.path:
-            return os.path.basename(self.arg)
+    @classmethod
+    def fullname_from_arg(cls, arg, origin):
+        if origin == cls.origin_enum.key:
+            return arg
+        elif origin == cls.origin_enum.url:
+            return basename(urlparse(arg).path)
+        elif origin == cls.origin_enum.path:
+            return os.path.basename(arg)
         else:
             assert False
+
+    @property
+    def original_fullname(self):
+        return self.fullname_from_arg(self.arg, self.origin)
 
     @property
     def original_name(self):
