@@ -56,7 +56,7 @@ This time, the bibtex file is passed as a path.
 org_attach bib /path/to/some/biblio.bib
 ```
 
-The bibtex file can be passed as a URL. note that for this specific example, the bibtex file has a `PDF` field, so the
+The bibtex file can be passed as a URL. Note that for this specific example, the bibtex file has a `PDF` field, so the
 paper will be attached automatically.
 ```sh
 org_attach bib https://hal.inria.fr/hal-01017319v2/bibtex
