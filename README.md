@@ -5,126 +5,69 @@
 ## Installation
 
 ```sh
-pip3 install --user pybtex python-magic requests
-git clone https://github.com/Ezibenroc/DOI_to_org.git
+./setup.py install --user
 ```
 
-Create a file `.doirc` in your working directory or one of its parent directories. The syntax of this file is:
-```yaml
-orgfile: /path/to/your/org/file
-```
-You can also create a global configuration file in `~/.config/doi2org/.doirc`
+Create a file configuration file `.orgattachrc` in your working directory or one of its parent directories. Please refer
+to [the example file](example_orgattachrc.yaml).
 
-## Basic usage
+You can also create a global configuration file in `~/.config/orgattach/orgattachrc`.
+
+## Usage
 
 ```sh
-python3 doi_to_org.py ARG1 ARG2 ARG3 ARG4 ...
+org_attach {bib,ipynb} entries [entries ...]
 ```
 
-Each argument can either be a DOI, the path to a bibtex file, the URL to a bibtex file or a HAL identifier.
+The syntax for the entries depends on the command (`bib` or `ipynb`). The script will add a new entry in the org file
+according to the template specified in the configuration file. It will also attach the given file (when relevant).
 
-Typing `python3` everytime is tedious. We hence suggest that you install an alias somewhere in your $PATH, for instance like this:
+- **Bibliographical entry** (`bib`):
+    An entry is made of two arguments separated by a comma. The first argument is mandatory, it is an identifier for a
+    bibtex file. The second argument is optionnal, it is an identifier for any file (usually the corresponding PDF) that
+    should be attached.
+    Note that if no attachment file is specified, the script will try do fetch the file specified by the `PDF` field of
+    the bibtex file (if there is one).
+- **Jupyter notebook entry** (`ipynb`):
+    An entry is made of one mandatory argument, an identifier for a jupyter notebook file that should be attached.
 
+An identifier for any file can be a path in your file system or a URL. An identifier for a bibtex file can _also_ be a
+DOI or an IdHAL.
+
+## Examples
+
+Add three entries for the given DOI.
 ```sh
-ln -s <full-path-to-doi_to_org.py> ~/bin/doi2org
+org_attach bib 10.1137/0206024 10.1145/357172.357176 10.1145/321033.321034
 ```
-You can then simply type doi2org.
 
-It will append the result to the org file that is specified in the `.doirc` file.
-
-Example:
+Add an entry for the given DOI and attach the given file.
 ```sh
-python3 doi_to_org.py 10.1137/0206024 10.1145/357172.357176 10.1145/321033.321034
+org_attach bib 10.1137/0206024,/path/to/the/file.pdf
 ```
 
-Result:
-```org
-**** UNREAD Fast Pattern Matching in Strings
-:PROPERTIES:
-:DOI: 10.1137/0206024
-:URL: https://doi.org/10.1137%2F0206024
-:AUTHORS: Donald E. Knuth, Jr. James H. Morris, Vaughan R. Pratt
-:END:
-***** Summary
-***** Notes
-***** Open Questions [/]
-***** BibTeX
-#+BEGIN_SRC bib :tangle bibliography.bib
-@article{Knuth_1977,
-    author = "Knuth, Donald E. and James H. Morris, Jr. and Pratt, Vaughan R.",
-    doi = "10.1137/0206024",
-    url = "https://doi.org/10.1137\%2F0206024",
-    year = "1977",
-    month = "jun",
-    publisher = "Society for Industrial {\\&} Applied Mathematics ({SIAM})",
-    volume = "6",
-    number = "2",
-    pages = "323--350",
-    title = "Fast Pattern Matching in Strings",
-    journal = "{SIAM} Journal on Computing"
-}
-#+END_SRC
-**** UNREAD The Byzantine Generals Problem
-:PROPERTIES:
-:DOI: 10.1145/357172.357176
-:URL: https://doi.org/10.1145%2F357172.357176
-:AUTHORS: Leslie Lamport, Robert Shostak, Marshall Pease
-:END:
-***** Summary
-***** Notes
-***** Open Questions [/]
-***** BibTeX
-#+BEGIN_SRC bib :tangle bibliography.bib
-@article{Lamport_1982,
-    author = "Lamport, Leslie and Shostak, Robert and Pease, Marshall",
-    doi = "10.1145/357172.357176",
-    url = "https://doi.org/10.1145\%2F357172.357176",
-    year = "1982",
-    month = "jul",
-    publisher = "Association for Computing Machinery ({ACM})",
-    volume = "4",
-    number = "3",
-    pages = "382--401",
-    title = "The Byzantine Generals Problem",
-    journal = "{ACM} Transactions on Programming Languages and Systems"
-}
-#+END_SRC
-**** UNREAD A Computing Procedure for Quantification Theory
-:PROPERTIES:
-:DOI: 10.1145/321033.321034
-:URL: https://doi.org/10.1145%2F321033.321034
-:AUTHORS: Martin Davis, Hilary Putnam
-:END:
-***** Summary
-***** Notes
-***** Open Questions [/]
-***** BibTeX
-#+BEGIN_SRC bib :tangle bibliography.bib
-@article{Davis_1960,
-    author = "Davis, Martin and Putnam, Hilary",
-    doi = "10.1145/321033.321034",
-    url = "https://doi.org/10.1145\%2F321033.321034",
-    year = "1960",
-    month = "jul",
-    publisher = "Association for Computing Machinery ({ACM})",
-    volume = "7",
-    number = "3",
-    pages = "201--215",
-    title = "A Computing Procedure for Quantification Theory",
-    journal = "Journal of the {ACM}"
-}
-#+END_SRC
-```
-
-## Power user
-
+Same thing, but the file is passed as an URL instead of a path.
 ```sh
-python3 doi_to_org.py ARG1,FILE1 ARG2,FILE2 ARG3,FILE3 ARG4,FILE4 ...
+org_attach bib 10.1137/0206024,http://somewebsite.com/path/to/the/file.pdf
 ```
 
-It will add an entry in the org-file for each of the arguments, as before. It will also attach
-the file FILEi to the entry that was added for ARGi. FILEi has to be the path to a file on the
-system or an URL to a file.
+This time, the bibtex file is passed as a path.
+```sh
+org_attach bib /path/to/some/biblio.bib
+```
 
-Note that if an attachment file is not specified but the bibliographical entry has a `PDF` field,
-the script will try to download this PDF and attach it.
+The bibtex file can be passed as a URL. note that for this specific example, the bibtex file has a `PDF` field, so the
+paper will be attached automatically.
+```sh
+org_attach bib https://hal.inria.fr/hal-01017319v2/bibtex
+```
+
+Equivalent to the previous example, but using the IdHAL instead of the URL.
+```sh
+org_attach bib hal-01017319v2
+```
+
+Attaching a Jupyter notebook file specified by a path.
+```sh
+org_attach ipynb /path/to/the/file.ipynb
+```
