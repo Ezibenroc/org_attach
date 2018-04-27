@@ -37,6 +37,7 @@ before_install: |
     # A manual check that the correct version of Python is running.
     python --version
     brew install libmagic
+    pip install ipython
   fi
 
 install:
