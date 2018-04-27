@@ -22,8 +22,8 @@ import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 from .version import __version__
 
-CONFIG_FILE = '.doirc'
-CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
+CONFIG_FILE = '.orgattachrc'
+CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'orgattach')
 CONFIG_ORGFILE_KEY = 'orgfile'
 CONFIG_PDFPATH_KEY = 'pdfpath'
 CONFIG_TAG_KEY = 'tags'

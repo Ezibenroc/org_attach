@@ -14,7 +14,7 @@ from shutil import copyfile
 from org_attach import *
 
 ORG_FILE = 'foo.org'
-EXAMPLE_CONFIG = 'example_doirc.yaml'
+EXAMPLE_CONFIG = 'example_orgattachrc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
