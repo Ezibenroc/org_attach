@@ -8,8 +8,8 @@
 ./setup.py install --user
 ```
 
-Create a file configuration file `.orgattachrc` in your working directory or one of its parent directories. Please refer
-to [the example file](example_orgattachrc.yaml).
+Create a configuration file `.orgattachrc` in your working directory or one of its parent directories. Please refer to
+[the example file](example_orgattachrc.yaml).
 
 You can also create a global configuration file in `~/.config/orgattach/orgattachrc`.
 
