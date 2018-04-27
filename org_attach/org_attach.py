@@ -20,6 +20,7 @@ import mimetypes
 import magic            # https://pypi.python.org/pypi/python-magic/
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
+from .version import __version__
 
 CONFIG_FILE = '.doirc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'doi2org')
@@ -548,9 +549,11 @@ class IpynbOrgEntry(AbstractOrgEntry):
 
 CONFIG_TYPES = [BibOrgEntry, IpynbOrgEntry]
 TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
             description='Automatic templates for org-mode')
+    parser.add_argument('--version', action='version',
+                    version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('type', type=str, choices=[config.type_key for config in CONFIG_TYPES],
             help='Type of the file to add.')
     parser.add_argument('entries', type=str, nargs='+',
@@ -570,3 +573,5 @@ if __name__ == '__main__':
         except FileNotFoundError as e:
             sys.exit(e)
 
+if __name__ == '__main__':
+    main()

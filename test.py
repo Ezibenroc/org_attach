@@ -11,14 +11,14 @@ import shutil
 from collections import namedtuple
 from subprocess import Popen, PIPE
 from shutil import copyfile
-from doi_to_org import *
+from org_attach import *
 
 ORG_FILE = 'foo.org'
 EXAMPLE_CONFIG = 'example_doirc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
-        cmd = ['./doi_to_org.py', *args]
+        cmd = ['org_attach', *args]
         process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         output = process.communicate()
         if process.wait() != 0:
