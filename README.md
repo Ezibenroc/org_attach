@@ -1,6 +1,6 @@
 # Org\_attach
 
-[![Build Status](https://travis-ci.org/Ezibenroc/DOI_to_org.svg?branch=master)](https://travis-ci.org/Ezibenroc/DOI_to_org)
+[![Build Status](https://travis-ci.org/Ezibenroc/org_attach.svg?branch=master)](https://travis-ci.org/Ezibenroc/org_attach)
 
 ## Installation
 
