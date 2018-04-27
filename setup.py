@@ -22,4 +22,10 @@ if __name__ == '__main__':
         author = "Tom Cornebize",
         author_email = "tom.cornebize@gmail.com",
         url = 'https://github.com/Ezibenroc/DOI_to_org',
+        install_requires = [
+            'pybtex',
+            'python-magic',
+            'requests',
+            'jupyter',
+        ],
     )
