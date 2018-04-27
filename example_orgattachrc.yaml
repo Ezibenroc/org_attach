@@ -1,16 +1,20 @@
-orgfile: foo.org
-level: 4
+orgfile: foo.org    # the path to your org file
+level: 4            # the level to which should be added the entry (i.e., number of asterisks)
+
+# Bibliographical entry
 bib:
-    tags: PAPER
-    todo: UNREAD
-    properties:
+    tags: PAPER     # the tag(s) for this entry type (note: can also be a list)
+    todo: UNREAD    # the todo keywords for this entry type
+    properties:     # the properties for this entry type (no other property allowed here)
         - DOI
         - URL
         - AUTHORS
-    sections:
+    sections:       # the section titles for this entry type
         - Summary
         - Notes
         - Open Questions [/]
+
+# Jupyter notebook entry
 ipynb:
     tags: NOTEBOOK
     properties:
@@ -20,4 +24,4 @@ ipynb:
         - Summary
         - Notes
         - Open Questions [/]
-    compile: True
+    compile: True   # True to compile the .ipynb file to a .html when attaching it, False to keep it as a .ipynb
