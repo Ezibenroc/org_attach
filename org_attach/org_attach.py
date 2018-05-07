@@ -280,7 +280,7 @@ class Attachment:
                 return func(arg)
             except FileError:
                 continue
-        raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
+        raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).' % arg)
 
     @property
     def path(self):
