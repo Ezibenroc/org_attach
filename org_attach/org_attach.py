@@ -7,7 +7,6 @@ import json
 import hashlib
 import shutil
 import argparse
-import subprocess
 from enum import Enum
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -19,6 +18,7 @@ import magic            # https://pypi.python.org/pypi/python-magic/
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 from .version import __version__
+import nbformat, nbconvert
 
 CONFIG_FILE = '.orgattachrc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'orgattach')
@@ -510,9 +510,13 @@ class IpynbOrgEntry(AbstractOrgEntry):
 
     def compile_attachment(self):
         in_file = self.attachment.path
+        with open(in_file) as f_notebook:
+            notebook = nbformat.read(f_notebook, as_version=4)
+        exporter = nbconvert.HTMLExporter()
+        body, _ = exporter.from_notebook_node(notebook)
         out_file = TempFile(self.attachment.original_name + '.html')
-        cmd = ['jupyter', 'nbconvert', in_file, '--to', 'html', '--output', out_file.name]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open(out_file.name, 'w') as f_export:
+            f_export.write(body)
         self.attachment = Attachment.from_arg(out_file.name)
 
     @property
