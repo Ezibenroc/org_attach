@@ -285,14 +285,14 @@ class AttachmentTest(Util):
 
     def test_ipynb_py(self):
         self.generic_test(mode='ipynb', args=['test_data/test_python.ipynb'],
-                file_hash = '7c16d6203440fac37a6a31a2f374be6c81f9bf61b8dccc1bbcf73c754e64385fd0fe7ef127399c3f281cf4808453d5ac040e9128747a9ada2cc99faea47232ae',
+                file_hash = '8540dacc911962b5192b1b6cad0a43425dcdd18a1c7544236e3851d78c509ff3ddb5d859515cb05ab9d440ddcf41b0f7c4f7d365342c1d75c5011685da5cfdcc',
                 file_name = 'test_python.html',
                 expected_output_file = 'test_data/ipynb_py.org',
                 check_hash=True)
 
     def test_ipynb_r(self):
         self.generic_test(mode='ipynb', args=['test_data/test_r.ipynb'],
-                file_hash = 'abfe9fb1523ee00b53407868eef5addc90521c91ac52100ed9a91884bb866a3db3dc223a99ee80f0fbe5f4434ea9d18e8157b7a9c13a20242f39df4bddeb09a4',
+                file_hash = '4fea4785ef6696d56cb2b74e19fdb1bd4258bb01edb06e3b3331094a3c35be4b9a7f39dd4d570e6485612e85a8debbf037c87eb471606b647f7540c9419cafa5',
                 file_name = 'test_r.html',
                 expected_output_file = 'test_data/ipynb_r.org',
                 check_hash=True)
