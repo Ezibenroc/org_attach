@@ -41,7 +41,11 @@ before_install: |
   fi
 
 install:
+    - pip install coveralls
     - python setup.py install
 
 script:
-    - python test.py
+    - coverage run --source=org_attach test.py
+
+after_success:
+    - coveralls
