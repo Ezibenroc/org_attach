@@ -213,6 +213,9 @@ class TempFile:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_file = pathlib.Path(self.temp_dir.name) / filename
 
+    def __del__(self):
+        self.close()
+
     def write(self, content):
         self.temp_file.write_bytes(content)
 
@@ -551,7 +554,7 @@ class IpynbOrgEntry(AbstractOrgEntry):
 
 CONFIG_TYPES = [BibOrgEntry, IpynbOrgEntry]
 TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
-def main():
+def main(args):
     parser = argparse.ArgumentParser(
             description='Automatic templates for org-mode')
     parser.add_argument('--version', action='version',
@@ -560,7 +563,7 @@ def main():
             help='Type of the file to add.')
     parser.add_argument('entries', type=str, nargs='+',
             help='Descriptors for the entries to add.')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     try:
         config = get_config()
     except FileNotFoundError:
@@ -576,4 +579,4 @@ def main():
             sys.exit(e)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)

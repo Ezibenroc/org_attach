@@ -9,7 +9,6 @@ import yaml
 import filecmp
 import shutil
 from collections import namedtuple
-from subprocess import Popen, PIPE
 from shutil import copyfile
 from org_attach import *
 
@@ -18,12 +17,7 @@ EXAMPLE_CONFIG = 'example_orgattachrc.yaml'
 
 class Util(unittest.TestCase):
     def run_prog(self, *args):
-        cmd = ['org_attach', *args]
-        process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-        output = process.communicate()
-        if process.wait() != 0:
-            sys.stderr.write('with command: %s\nstdout: %s\nstderr: %s\n' % (' '.join(args), output[0].decode('utf8'), output[1].decode('utf8')))
-            self.assertTrue(False)
+        main(args)
         with open(ORG_FILE) as f:
             return f.read()
 
