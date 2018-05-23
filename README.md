@@ -1,6 +1,7 @@
 # Org\_attach
 
 [![Build Status](https://travis-ci.org/Ezibenroc/org_attach.svg?branch=master)](https://travis-ci.org/Ezibenroc/org_attach)
+[![Coverage Status](https://coveralls.io/repos/github/Ezibenroc/org_attach/badge.svg?branch=master)](https://coveralls.io/github/Ezibenroc/org_attach?branch=master)
 
 ## Installation
 
