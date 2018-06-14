@@ -42,6 +42,14 @@ logger.addHandler(ch)
 logger.setLevel(logging.DEBUG)
 
 
+def get_url(url, **kwargs):
+    logger.debug('get url: %s' % url)
+    headers = kwargs.get('headers', {})
+    headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+    kwargs['headers'] = headers
+    return requests.get(url, **kwargs)
+
+
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
     if os.path.isfile(filepath):
@@ -98,10 +106,9 @@ class BibEntry:
         assert len(self.bib.entries) == 1
 
     @classmethod
-    def bibtex_from_url(cls, url, head=None):
+    def bibtex_from_url(cls, url, **kwargs):
         try:
-            logger.debug('get url: %s' % url)
-            req = requests.get(url, headers=head)
+            req = get_url(url, **kwargs)
         except requests.exceptions.MissingSchema:
             raise BibError('Wrong URL and/or header.')
         if req.status_code != 200:
@@ -113,7 +120,7 @@ class BibEntry:
     def bibtex_from_doi(cls, doi):
         url = 'http://dx.doi.org/%s' % doi
         head = {'Accept': 'application/x-bibtex'}
-        return cls.bibtex_from_url(url, head)
+        return cls.bibtex_from_url(url, headers=head)
 
     @classmethod
     def bibtex_from_halid(cls, hal):
@@ -268,8 +275,7 @@ class Attachment:
     def from_url(cls, url):
         origin = cls.origin_enum.url
         try:
-            logger.debug('get url: %s' % url)
-            req = requests.get(url)
+            req = get_url(url)
         except requests.exceptions.MissingSchema:
             raise FileError('Wrong URL.')
         if req.status_code != 200:
