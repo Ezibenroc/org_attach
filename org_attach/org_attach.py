@@ -18,7 +18,8 @@ import magic            # https://pypi.python.org/pypi/python-magic/
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 from .version import __version__
-import nbformat, nbconvert
+import nbformat
+import nbconvert
 
 CONFIG_FILE = '.orgattachrc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'orgattach')
@@ -31,34 +32,41 @@ CONFIG_SECTIONS_KEY = 'sections'
 CONFIG_LEVEL_KEY = 'level'
 CONFIG_COMPILATION_KEY = 'compile'
 
+
 def _find_config_file(dirname):
     filepath = os.path.join(dirname, CONFIG_FILE)
     if os.path.isfile(filepath):
         return filepath
     newpath = os.path.dirname(dirname)
-    if newpath == dirname: # root directory
+    if newpath == dirname:  # root directory
         filename = os.path.join(CONFIG_DIR, CONFIG_FILE)
         if os.path.isfile(filename):
             return filename
         raise FileNotFoundError('No %s file.' % CONFIG_FILE)
     return _find_config_file(newpath)
 
+
 def find_config_file():
     return _find_config_file(os.getcwd())
 
+
 class ConfigError(Exception):
     pass
+
 
 def get_config():
     config_file = find_config_file()
     with open(config_file, 'r') as f:
         config = yaml.load(f)
     if CONFIG_ORGFILE_KEY not in config:
-        raise ConfigError('No %s defined in the configuration file.' % CONFIG_ORGFILE_KEY)
+        raise ConfigError(
+            'No %s defined in the configuration file.' % CONFIG_ORGFILE_KEY)
     orgfile = config[CONFIG_ORGFILE_KEY]
     if not os.path.isfile(orgfile):
-        raise ConfigError('%s %s does not exist.' % (CONFIG_ORGFILE_KEY, orgfile))
+        raise ConfigError('%s %s does not exist.' %
+                          (CONFIG_ORGFILE_KEY, orgfile))
     return config
+
 
 def safeget(dct, *keys):
     '''Taken from https://stackoverflow.com/a/25833661/4110059'''
@@ -68,6 +76,7 @@ def safeget(dct, *keys):
         except KeyError:
             return None
     return dct
+
 
 class BibEntry:
     def __init__(self, pybtex_bib):
@@ -107,17 +116,18 @@ class BibEntry:
     @classmethod
     def bibtex_from_arg(cls, arg):
         functions = [
-                cls.bibtex_from_file,
-                cls.bibtex_from_doi,
-                cls.bibtex_from_url,
-                cls.bibtex_from_halid,
+            cls.bibtex_from_file,
+            cls.bibtex_from_doi,
+            cls.bibtex_from_url,
+            cls.bibtex_from_halid,
         ]
         for func in functions:
             try:
                 return func(arg)
             except BibError:
                 continue
-        raise BibError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
+        raise BibError(
+            'Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
 
     @classmethod
     def from_bibtex(cls, bibtex):
@@ -126,7 +136,7 @@ class BibEntry:
             raise BibError('Wrong bibtex, no entries.')
         entries = []
         for key, value in bib.entries.items():
-            entries.append(pybtex.database.BibliographyData({key : value}))
+            entries.append(pybtex.database.BibliographyData({key: value}))
         return [cls(e) for e in entries]
 
     @classmethod
@@ -176,12 +186,14 @@ class BibEntry:
         try:
             authors = self.bib.entries.values()[0].persons['author']
         except KeyError:
-            raise MissingAuthorError("Stopping at bibtex entry '%s' because it had no 'author' field." % (self.bib.entries.keys()[0]))
+            raise MissingAuthorError("Stopping at bibtex entry '%s' because it had no 'author' field." % (
+                self.bib.entries.keys()[0]))
 
         names = []
         for person in authors:
             names.append(format_person(person))
         return ', '.join(names)
+
 
 class CustomWriter(Writer):
     '''
@@ -191,6 +203,7 @@ class CustomWriter(Writer):
     program again with the resulting bibtex would then replace the '\%' by a '\\%'. This is obviously buggy,
     so let's just disable it.
     '''
+
     def _encode(self, text):
         return text
 
@@ -198,14 +211,18 @@ class CustomWriter(Writer):
 class BibError(Exception):
     pass
 
+
 class FileError(Exception):
     pass
 
+
 class MissingAuthorError(KeyError):
     '''Raise when a bibtex entry is missing the "author" field'''
+
     def __init__(self, message, *args):
         self.message = message
         super(MissingAuthorError, self).__init__(message, *args)
+
 
 class TempFile:
     def __init__(self, filename):
@@ -226,8 +243,10 @@ class TempFile:
     def close(self):
         self.temp_dir.cleanup()
 
+
 class Attachment:
     origin_enum = Enum('Origin', ['key', 'url', 'path'])
+
     def __init__(self, temporary_file, arg, origin):
         self.file = temporary_file
         self.arg = arg
@@ -268,20 +287,22 @@ class Attachment:
                     shutil.copyfile(os.path.join(root, f), temp_f.name)
                     attachment = cls(temp_f, key, origin)
                     return attachment
-        raise FileNotFoundError("Couldn't find file '%s' in '%s'" % (key, path))
+        raise FileNotFoundError(
+            "Couldn't find file '%s' in '%s'" % (key, path))
 
     @classmethod
     def from_arg(cls, arg):
         functions = [
-                cls.from_path,
-                cls.from_url,
+            cls.from_path,
+            cls.from_url,
         ]
         for func in functions:
             try:
                 return func(arg)
             except FileError:
                 continue
-        raise FileError('Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).' % arg)
+        raise FileError(
+            'Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).' % arg)
 
     @property
     def path(self):
@@ -312,7 +333,7 @@ class Attachment:
 
     @classmethod
     def crypto_hash(cls, filename):
-    # https://stackoverflow.com/a/3431838/4110059
+        # https://stackoverflow.com/a/3431838/4110059
         h = hashlib.sha512()
         with open(filename, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -330,15 +351,16 @@ class Attachment:
             return ext
         mime = magic.from_file(self.path, mime=True)
         if mime == 'text/plain':
-            return '.txt' # mimetypes return some weird things for plain text
+            return '.txt'  # mimetypes return some weird things for plain text
         return mimetypes.guess_extension(mime)
 
     def move_to(self, target):
         shutil.move(self.path, target)
         try:
-            self.file.close() # avoid the exception when the object eventually get deleted
+            self.file.close()  # avoid the exception when the object eventually get deleted
         except FileNotFoundError:
             pass
+
 
 class AbstractOrgEntry(ABC):
     type_key = None
@@ -362,13 +384,14 @@ class AbstractOrgEntry(ABC):
         first_level_dir = os.path.join(data_dir, file_hash[:2])
         os.makedirs(first_level_dir, exist_ok=True)
         last_level_dir = os.path.join(first_level_dir, file_hash[2:])
-        os.makedirs(last_level_dir) # if it already existed, this is a problem we want to know
+        # if it already existed, this is a problem we want to know
+        os.makedirs(last_level_dir)
         self.attachment.move_to(os.path.join(last_level_dir, file_name))
 
     @property
     def tags(self):
         tags = self.config.get(CONFIG_TAG_KEY, [])
-        if isinstance(tags, str): # 0 or 1 tag
+        if isinstance(tags, str):  # 0 or 1 tag
             tags = [tags]
         return tags
 
@@ -388,7 +411,7 @@ class AbstractOrgEntry(ABC):
         tags = ':%s:' % ':'.join(tags)
         todo = [self.todo] if self.todo else []
         header = ['*'*self.star_level, *todo, self.title]
-        h= ' '.join(header) + '\t' + tags
+        h = ' '.join(header) + '\t' + tags
         return h
 
     @property
@@ -428,9 +451,9 @@ class AbstractOrgEntry(ABC):
         return '\n'.join(sections)
 
     def to_orgmode(self):
-        header     = self.header_str()
+        header = self.header_str()
         properties = self.properties_str()
-        sections   = self.sections_str()
+        sections = self.sections_str()
         return '\n'.join([header, properties, sections])
 
     @property
@@ -446,15 +469,17 @@ class AbstractOrgEntry(ABC):
             f.write(org_txt)
             f.write('\n')
 
+
 class BibOrgEntry(AbstractOrgEntry):
     type_key = 'bib'
+
     def __init__(self, config, bibentry, attachment=None):
         super().__init__(config, attachment)
         self.bibentry = bibentry
-        if not self.attachment: # no attachment specified, trying to grab it
+        if not self.attachment:  # no attachment specified, trying to grab it
             try:
                 self.attachment = Attachment.from_arg(self.bibentry.pdf)
-            except (FileError, KeyError): # bad luck, could not grab it, let's not attach anything
+            except (FileError, KeyError):  # bad luck, could not grab it, let's not attach anything
                 pass
 
     @classmethod
@@ -469,7 +494,8 @@ class BibOrgEntry(AbstractOrgEntry):
                 return [cls(config, bib_entry) for bib_entry in bib_entries]
         elif len(arg_list) == 2:
             if len(bib_entries) > 1:
-                raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (arg_list[0], arg_list[1]))
+                raise SyntaxError('Argument %s holds several bibliographical entries, but one attachment %s was given.' % (
+                    arg_list[0], arg_list[1]))
             bib_entry = bib_entries[0]
             return [cls(config, bib_entry, Attachment.from_arg(arg_list[1]))]
         else:
@@ -482,9 +508,9 @@ class BibOrgEntry(AbstractOrgEntry):
     @property
     def properties(self):
         try:
-            prop = {'DOI' : self.bibentry.doi,
-                    'URL' : self.bibentry.url,
-                    'AUTHORS' : self.bibentry.authors
+            prop = {'DOI': self.bibentry.doi,
+                    'URL': self.bibentry.url,
+                    'AUTHORS': self.bibentry.authors
                     }
         except MissingAuthorError as e:
             sys.exit(e)
@@ -502,8 +528,10 @@ class BibOrgEntry(AbstractOrgEntry):
     def attachment_file_name(self):
         return self.bibentry.title.replace(' ', '_') + self.attachment.extension
 
+
 class IpynbOrgEntry(AbstractOrgEntry):
     type_key = 'ipynb'
+
     def __init__(self, config, attachment):
         super().__init__(config, attachment)
         with open(self.attachment.path) as f:
@@ -539,8 +567,8 @@ class IpynbOrgEntry(AbstractOrgEntry):
 
     @property
     def properties(self):
-        prop = {'LANGUAGE' : self.metadata['language_info']['name'],
-                'VERSION'  : self.metadata['language_info']['version'],
+        prop = {'LANGUAGE': self.metadata['language_info']['name'],
+                'VERSION': self.metadata['language_info']['version'],
                 }
         properties = []
         for p in self.config.get(CONFIG_PROPERTIES_KEY, []):
@@ -553,21 +581,24 @@ class IpynbOrgEntry(AbstractOrgEntry):
 
 
 CONFIG_TYPES = [BibOrgEntry, IpynbOrgEntry]
-TYPE_TO_CLS = {conf.type_key : conf for conf in CONFIG_TYPES}
+TYPE_TO_CLS = {conf.type_key: conf for conf in CONFIG_TYPES}
+
+
 def main(args):
     parser = argparse.ArgumentParser(
-            description='Automatic templates for org-mode')
+        description='Automatic templates for org-mode')
     parser.add_argument('--version', action='version',
-                    version='%(prog)s {version}'.format(version=__version__))
+                        version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('type', type=str, choices=[config.type_key for config in CONFIG_TYPES],
-            help='Type of the file to add.')
+                        help='Type of the file to add.')
     parser.add_argument('entries', type=str, nargs='+',
-            help='Descriptors for the entries to add.')
+                        help='Descriptors for the entries to add.')
     args = parser.parse_args(args)
     try:
         config = get_config()
     except FileNotFoundError:
-        sys.exit('No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
+        sys.exit(
+            'No configuration file found. Please add a %s file somewhere.' % CONFIG_FILE)
     except ConfigError as e:
         sys.exit('Error with the configuration file: %s' % e)
     cls = TYPE_TO_CLS[args.type]
@@ -577,6 +608,7 @@ def main(args):
                 entry.add_entry()
         except FileNotFoundError as e:
             sys.exit(e)
+
 
 if __name__ == '__main__':
     main(sys.argv)
