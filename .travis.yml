@@ -6,9 +6,9 @@ matrix:
       python: 3.5
     - os: linux
       python: 3.6
-    - os: osx
-      language: generic
-      env: PYTHON=3.6-dev
+      #    - os: osx
+      #      language: generic
+      #      env: PYTHON=3.6-dev
 
 before_install: |
   # These steps are taken from https://pythonhosted.org/CodeChat/.travis.yml.html
