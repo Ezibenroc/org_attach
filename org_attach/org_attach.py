@@ -19,6 +19,7 @@ from pybtex.database.output.bibtex import Writer
 from .version import __version__
 import nbformat
 import nbconvert
+import logging
 
 CONFIG_FILE = '.orgattachrc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'orgattach')
@@ -30,6 +31,15 @@ CONFIG_PROPERTIES_KEY = 'properties'
 CONFIG_SECTIONS_KEY = 'sections'
 CONFIG_LEVEL_KEY = 'level'
 CONFIG_COMPILATION_KEY = 'compile'
+
+
+logger = logging.getLogger(__name__)
+ch = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+ch.setLevel(logging.DEBUG)
+logger.addHandler(ch)
+logger.setLevel(logging.DEBUG)
 
 
 def _find_config_file(dirname):
@@ -78,13 +88,19 @@ def safeget(dct, *keys):
 
 
 class BibEntry:
-    def __init__(self, pybtex_bib):
+    origin_enum = Enum('Origin', ['doi', 'halid', 'url', 'path'])
+
+    def __init__(self, pybtex_bib, origin, arg):
+        logger.info('New bibtex from %s %s' % (origin.name, arg))
+        self.origin = origin
+        self.arg = arg
         self.bib = pybtex_bib
         assert len(self.bib.entries) == 1
 
     @classmethod
     def bibtex_from_url(cls, url, head=None):
         try:
+            logger.debug('get url: %s' % url)
             req = requests.get(url, headers=head)
         except requests.exceptions.MissingSchema:
             raise BibError('Wrong URL and/or header.')
@@ -115,33 +131,29 @@ class BibEntry:
     @classmethod
     def bibtex_from_arg(cls, arg):
         functions = [
-            cls.bibtex_from_file,
-            cls.bibtex_from_doi,
-            cls.bibtex_from_url,
-            cls.bibtex_from_halid,
+            (cls.bibtex_from_file, cls.origin_enum.path),
+            (cls.bibtex_from_doi, cls.origin_enum.doi),
+            (cls.bibtex_from_url, cls.origin_enum.url),
+            (cls.bibtex_from_halid, cls.origin_enum.halid)
         ]
-        for func in functions:
+        for func, origin in functions:
             try:
-                return func(arg)
+                return func(arg), origin
             except BibError:
                 continue
         raise BibError(
             'Argument %s is not an understandable format (not a DOI, not a path to a bibtex file, etc.).')
 
     @classmethod
-    def from_bibtex(cls, bibtex):
+    def from_arg(cls, arg):
+        bibtex, origin = cls.bibtex_from_arg(arg)
         bib = pybtex.database.parse_string(bibtex, bib_format='bibtex')
         if len(bib.entries) == 0:
             raise BibError('Wrong bibtex, no entries.')
         entries = []
         for key, value in bib.entries.items():
             entries.append(pybtex.database.BibliographyData({key: value}))
-        return [cls(e) for e in entries]
-
-    @classmethod
-    def from_arg(cls, arg):
-        bibtex = cls.bibtex_from_arg(arg)
-        return cls.from_bibtex(bibtex)
+        return [cls(e, origin, arg) for e in entries]
 
     @property
     def title(self):
@@ -247,6 +259,7 @@ class Attachment:
     origin_enum = Enum('Origin', ['key', 'url', 'path'])
 
     def __init__(self, temporary_file, arg, origin):
+        logger.info('New attachment from %s %s' % (origin.name, arg))
         self.file = temporary_file
         self.arg = arg
         self.origin = origin
@@ -255,6 +268,7 @@ class Attachment:
     def from_url(cls, url):
         origin = cls.origin_enum.url
         try:
+            logger.debug('get url: %s' % url)
             req = requests.get(url)
         except requests.exceptions.MissingSchema:
             raise FileError('Wrong URL.')

@@ -11,6 +11,9 @@ import shutil
 from collections import namedtuple
 from shutil import copyfile
 from org_attach import *
+import logging
+
+logger.setLevel(logging.ERROR)
 
 ORG_FILE = 'foo.org'
 EXAMPLE_CONFIG = 'example_orgattachrc.yaml'
@@ -44,9 +47,7 @@ class Util(unittest.TestCase):
 
 class BibEntryTest(unittest.TestCase):
     def test_basic(self):
-        with open('test_data/casanova_input.bib') as f:
-            bibtex = f.read()
-        bib_list = BibEntry.from_bibtex(bibtex)
+        bib_list = BibEntry.from_arg('test_data/casanova_input.bib')
         self.assertEqual(len(bib_list), 1)
         bib = bib_list[0]
         self.assertEqual(bib.doi, '10.1016/j.jpdc.2014.06.008')
@@ -62,9 +63,7 @@ class BibEntryTest(unittest.TestCase):
                 bib.authors, 'Henri Casanova, Arnaud Giersch, Arnaud Legrand, Martin Quinson, Frédéric Suter')
 
     def test_missing_author(self):
-        with open('test_data/casanova_missing_author_input.bib') as f:
-            bibtex = f.read()
-        bib_list = BibEntry.from_bibtex(bibtex)
+        bib_list = BibEntry.from_arg('test_data/casanova_missing_author_input.bib')
         config = {CONFIG_ORGFILE_KEY: '', CONFIG_LEVEL_KEY: 4}
         org_entry = BibOrgEntry(config, bib_list[0], attachment=True)
         with self.assertRaises(SystemExit):
@@ -257,13 +256,10 @@ class AttachmentTest(Util):
                           expected_output_file='test_data/casanova_output.org')
 
     def test_pdfpath(self):
-        with open('test_data/casanova_local_pdf_input.bib') as f:
-            bibtex = f.read()
-
         pdfpath = 'test_data/pdf'
         orgfile = os.path.join(os.getcwd(), 'bar.org')
 
-        bib_list = BibEntry.from_bibtex(bibtex)
+        bib_list = BibEntry.from_arg('test_data/casanova_local_pdf_input.bib')
         config = {CONFIG_ORGFILE_KEY: orgfile, CONFIG_LEVEL_KEY: 4}
         org_entry = BibOrgEntry(
             config, bib_list[0], Attachment.from_key(pdfpath, bib_list[0].key))
@@ -286,7 +282,7 @@ class AttachmentTest(Util):
         pdfpath = 'test_data'
         orgfile = os.path.join(os.getcwd(), 'bar.org')
 
-        bib_list = BibEntry.from_bibtex(bibtex)
+        bib_list = BibEntry.from_arg('test_data/knuth_input.bib')
 
         with self.assertRaises(FileNotFoundError):
             attachment = Attachment.from_key(pdfpath, bib_list[0].key)
