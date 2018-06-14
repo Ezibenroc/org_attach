@@ -8,9 +8,6 @@ matrix:
       python: 3.6
     - os: osx
       language: generic
-      env: PYTHON=3.5-dev
-    - os: osx
-      language: generic
       env: PYTHON=3.6-dev
 
 before_install: |
