@@ -609,5 +609,5 @@ def main(args):
             sys.exit(e)
 
 
-if __name__ == '__main__':
-    main(sys.argv)
+def main_no_args():
+    main(sys.argv[1:])

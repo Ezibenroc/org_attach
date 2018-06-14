@@ -42,6 +42,9 @@ install:
 
 script:
     - coverage run --source=org_attach test.py
+    - python setup.py install
+    - which org_attach
+    - org_attach --version
 
 after_success:
     - coveralls

@@ -15,7 +15,7 @@ if __name__ == '__main__':
         name='org_attach',
         packages=['org_attach'],
         entry_points={
-            'console_scripts': ['org_attach = org_attach.org_attach:main']
+            'console_scripts': ['org_attach = org_attach.org_attach:main_no_args']
         },
         version=version,
         description='Script to attach various types of files to an org-mode notebook.',
