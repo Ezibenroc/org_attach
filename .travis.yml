@@ -3,16 +3,15 @@ language: python
 matrix:
   include:
     - os: linux
-      dist: trusty
-      sudo: required
       python: 3.5
     - os: linux
-      dist: trusty
-      sudo: required
       python: 3.6
     - os: osx
       language: generic
-      env: PYTHON=3.5.1
+      env: PYTHON=3.5-dev
+    - os: osx
+      language: generic
+      env: PYTHON=3.6-dev
 
 before_install: |
   # These steps are taken from https://pythonhosted.org/CodeChat/.travis.yml.html
@@ -41,7 +40,7 @@ before_install: |
   fi
 
 install:
-    - pip install coveralls
+    - pip install coveralls wheel
     - python setup.py install
 
 script:
@@ -49,3 +48,17 @@ script:
 
 after_success:
     - coveralls
+
+before_deploy:
+    - python setup.py bdist_wheel
+    - python setup.py sdist
+    - ls -l dist/
+deploy:
+    provider: releases
+    api_key: $GITHUB_TOKEN
+    file_glob: true
+    file: dist/*{tar.gz,whl}
+    skip_cleanup: true
+    on:
+        all_branches: true
+        tags: true

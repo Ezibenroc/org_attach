@@ -1,6 +1,5 @@
 import sys
 import requests
-import re
 import os
 import yaml
 import json
@@ -10,7 +9,7 @@ import argparse
 from enum import Enum
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
-from posixpath import basename, dirname
+from posixpath import basename
 import pathlib
 import tempfile
 import mimetypes
