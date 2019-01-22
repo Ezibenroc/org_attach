@@ -20,6 +20,7 @@ from .version import __version__
 import nbformat
 import nbconvert
 import logging
+import random
 
 CONFIG_FILE = '.orgattachrc'
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.config', 'orgattach')
@@ -41,11 +42,23 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 logger.setLevel(logging.DEBUG)
 
+user_agents = [
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.112 Safari/535.1',
+    'Mozilla/5.0 (Windows NT 6.0) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.112 Safari/535.1',
+    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1',
+    'Mozilla/5.0 (Windows NT 5.1; rv:5.0.1) Gecko/20100101 Firefox/5.0.1',
+    'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.4) Gecko/20060508 Firefox/1.5.0.4',
+    'Mozilla/5.0 (Windows; U; Win98; fr; rv:1.8.1) Gecko/20061010 Firefox/2.0',
+    'Opera/9.80 (Windows NT 6.1; WOW64; U; ru) Presto/2.10.289 Version/12.00',
+    'Opera/9.80 (Windows NT 6.1; Win64; x64; Edition Yx) Presto/2.12.388 Version/12.11',
+    'Opera/9.80 (Windows NT 6.1; MRA 6.0 (build 6001)) Presto/2.12.388 Version/12.10',
+]
+
 
 def get_url(url, **kwargs):
     logger.debug('get url: %s' % url)
     headers = kwargs.get('headers', {})
-    headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+    headers['User-Agent'] = random.choice(user_agents)
     kwargs['headers'] = headers
     return requests.get(url, **kwargs)
 
