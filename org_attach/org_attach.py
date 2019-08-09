@@ -87,7 +87,7 @@ class ConfigError(Exception):
 def get_config():
     config_file = find_config_file()
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
     if CONFIG_ORGFILE_KEY not in config:
         raise ConfigError(
             'No %s defined in the configuration file.' % CONFIG_ORGFILE_KEY)
@@ -209,7 +209,7 @@ class BibEntry:
     @property
     def authors(self):
         def format_name(name):
-            return name.plaintext()
+            return str(name)
 
         def format_person(person):
             names = person.rich_first_names + person.rich_middle_names + person.rich_last_names
