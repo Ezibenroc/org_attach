@@ -164,7 +164,8 @@ class BibEntry:
 
     @property
     def title(self):
-        return str(self.bib.entries.values()[0].rich_fields['title'])
+        title = self.bib.entries.values()[0].fields['title']
+        return str(pybtex.richtext.Text.from_latex(title))
 
     @property
     def doi(self):
