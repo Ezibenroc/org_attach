@@ -295,14 +295,14 @@ class AttachmentTest(Util):
                           file_hash='77b7bc568a8d4d3006203de73d1160b175b02e33609da56256712cfa500b70f3bee41cb0d14fa00a887c7afd609e1c85f70a985b84044e9cf1af55eac24a24e1',
                           file_name='test_python.html',
                           expected_output_file='test_data/ipynb_py.org',
-                          check_hash=True)
+                          check_hash=False)
 
     def test_ipynb_r(self):
         self.generic_test(mode='ipynb', args=['test_data/test_r.ipynb'],
                           file_hash='dcf8a4c9e2a736a5ac14d4bf546d918f78d18a262900d26781b7c3bb9fe12b68473a6cb58ec6e0721a1a9c162e0c2df11cffc992999f996ba93f89945980bcc5',
                           file_name='test_r.html',
                           expected_output_file='test_data/ipynb_r.org',
-                          check_hash=True)
+                          check_hash=False)
 
 
 if __name__ == "__main__":
