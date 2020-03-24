@@ -17,6 +17,7 @@ import magic            # https://pypi.python.org/pypi/python-magic/
 import pybtex.database  # https://pypi.python.org/pypi/pybtex/
 from pybtex.database.output.bibtex import Writer
 from .version import __version__
+from .html_inliner import inline_content
 import nbformat
 import nbconvert
 import logging
@@ -578,6 +579,7 @@ class IpynbOrgEntry(AbstractOrgEntry):
             notebook = nbformat.read(f_notebook, as_version=4)
         exporter = nbconvert.HTMLExporter()
         body, _ = exporter.from_notebook_node(notebook)
+        body = inline_content(body)
         out_file = TempFile(self.attachment.original_name + '.html')
         with open(out_file.name, 'w') as f_export:
             f_export.write(body)

@@ -11,6 +11,8 @@ pybtex = "^0.22.2"
 python-magic = "^0.4.15"
 requests = "^2.22"
 jupyter = "^1.0"
+bs4 = "^0.0.1"
+lxml = "^4.5.0"
 
 [tool.poetry.dev-dependencies]
 
