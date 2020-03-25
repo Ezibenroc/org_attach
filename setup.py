@@ -27,5 +27,6 @@ if __name__ == '__main__':
             'python-magic',
             'requests',
             'jupyter',
+            'bs4',
         ],
     )
