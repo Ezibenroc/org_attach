@@ -1,5 +1,6 @@
 # Org\_attach
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4625619.svg)](https://doi.org/10.5281/zenodo.4625619)
 [![Coverage Status](https://coveralls.io/repos/github/Ezibenroc/org_attach/badge.svg?branch=master)](https://coveralls.io/github/Ezibenroc/org_attach?branch=master)
 
 ## Installation
